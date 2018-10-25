@@ -1,20 +1,14 @@
 package com.example.tomato.oceanmusic.utils;
 
-import android.Manifest;
+
 import android.app.Activity;
 import android.app.Application;
 import android.app.Service;
 import android.content.ContentUris;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-
+import android.view.WindowManager;
 
 import com.example.tomato.oceanmusic.fragments.FragmentPlayingBar;
 import com.example.tomato.oceanmusic.models.Album;
@@ -45,6 +39,14 @@ public class DataCenter extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
+    }
+
+    public static void setStatusBarTranslucent(boolean makeTranslucent, Activity activity) {
+        if (makeTranslucent) {
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        } else {
+            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        }
     }
 
     public ArrayList<Song> getListSong() {

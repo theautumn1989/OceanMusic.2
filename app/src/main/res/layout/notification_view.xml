@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layout"
-    android:orientation="horizontal"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@color/background_table_layout"
+    android:orientation="horizontal">
 
     <LinearLayout
         android:layout_width="@dimen/notification_height"
@@ -15,69 +16,69 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_beats" />
+            android:src="@drawable/ic_album_new" />
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="200dp"
+        android:layout_width="@dimen/dimen_200"
         android:layout_height="match_parent"
-        android:padding="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
 
-        android:layout_weight="1">
+        android:padding="@dimen/dimen_8dp">
 
         <TextView
-            android:textColor="@color/text_color_notification"
+            android:id="@+id/tv_song_title_noti"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Người con gái đã bỏ anh mà đi"
-            android:textSize="15sp"
             android:maxLines="1"
-            android:id="@+id/tv_song_title_noti" />
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="@dimen/dimen_15sp" />
 
         <TextView
-            android:textColor="@color/text_color_notification"
+            android:id="@+id/tv_artist_noti"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Small Text"
-            android:textSize="14sp"
             android:maxLines="1"
-            android:id="@+id/tv_artist_noti" />
+            android:text="Small Text"
+            android:textColor="@color/white"
+            android:textSize="@dimen/dimen_14sp" />
 
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp">
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/dimen_8dp"
+        android:paddingRight="@dimen/dimen_8dp">
 
 
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/btn_play_pause_noti"
-            android:background="@null"
-            android:src="@drawable/pb_pause"
-            android:padding="5dp"/>
-
-        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@null"
+            android:padding="@dimen/dimen_5dp"
+            android:src="@drawable/ic_play_new" />
+
+        <ImageButton
             android:id="@+id/btn_next_noti"
-            android:background="@null"
-            android:src="@drawable/pb_next"
-            android:padding="5dp"/>
-
-        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_close_noti"
             android:background="@null"
-            android:src="@drawable/ic_notif_close_mtrl"
-            android:padding="5dp"/>
+            android:padding="@dimen/dimen_5dp"
+            android:src="@drawable/ic_next_notificaion" />
+
+        <ImageButton
+            android:id="@+id/btn_close_noti"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:padding="@dimen/dimen_5dp"
+            android:src="@drawable/ic_close_notification" />
     </LinearLayout>
 
 </LinearLayout>

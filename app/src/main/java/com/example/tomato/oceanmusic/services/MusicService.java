@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 
@@ -30,6 +31,9 @@ import java.util.Random;
 
 public class MusicService extends Service {
 
+    public static final int DATA_TYPE_SONG_ALL = 1;
+    public static final int DATA_TYPE_SONG_OF_ALBUM = 2;
+    public static final int DATA_TYPE_SONG_OF_ARSITS = 3;
     public static final String ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE";
     private static final int NOTIFICATION_ID = 1609;
 
@@ -37,16 +41,6 @@ public class MusicService extends Service {
     int IDAlbum;
 
     int IDArtist;
-
-    public boolean getStatusPlayApp() {
-        return statusPlayApp;
-    }
-
-    public void setStatusPlayApp(boolean statusPlayApp) {
-        this.statusPlayApp = statusPlayApp;
-    }
-
-    boolean statusPlayApp = false;
 
     private IBinder binder;
     MediaPlayer mediaPlayer;
@@ -62,12 +56,12 @@ public class MusicService extends Service {
     boolean statusPlayPause = false;
     boolean isShuffle = false;
     boolean isRepeat = false;
-
     boolean statusRepeat = true;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d("MusicServiceMedia","Create");
         mediaPlayer = new MediaPlayer();
         arrSong = new ArrayList<>();
         binder = new MyBinder();
@@ -75,21 +69,39 @@ public class MusicService extends Service {
 
     }
 
-    public void updateData(int type) {
-        if (statusPlayApp) {
-            switch (type) {
-                case 1:
-                    arrSong = DataCenter.instance.getListSong();
-                    break;
-                case 2:
-                    arrSong = DataCenter.instance.getListSongOfAlbum(IDAlbum);
-                    break;
-                case 3:
-                    arrSong = DataCenter.instance.getListSongOfArtist(IDArtist);
-                    break;
-                default:
-                    break;
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        mediaPlayer.stop();
+        mediaPlayer.release();
+        mediaPlayer = null;
+    }
+
+    public void getPositionToSearch(String id) {
+        if (arrSong != null) {
+            for (int i = 0; i < arrSong.size(); i++) {
+                if (arrSong.get(i).getId().equals(id)) {
+                    mPosition = i;
+                }
             }
+            playMusic(mPosition);
+        }
+    }
+
+    public void updateData(int type) {
+        switch (type) {
+            case DATA_TYPE_SONG_ALL:
+                arrSong = DataCenter.instance.getListSong();
+                break;
+            case DATA_TYPE_SONG_OF_ALBUM:
+                arrSong = DataCenter.instance.getListSongOfAlbum(IDAlbum);
+                break;
+            case DATA_TYPE_SONG_OF_ARSITS:
+                arrSong = DataCenter.instance.getListSongOfArtist(IDArtist);
+                break;
+            default:
+                break;
         }
     }
 
@@ -179,9 +191,14 @@ public class MusicService extends Service {
     }
 
     private void releaseMusic() {
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            stopMusic();
-            mediaPlayer.release();
+        try {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                Log.d("1234", "releaseMusic: ");
+                stopMusic();
+                mediaPlayer.release();
+            }
+        }catch (IllegalStateException e){
+
         }
     }
 
@@ -242,46 +259,39 @@ public class MusicService extends Service {
 
     public void changePlayPauseState() {
         if (isPlaying()) {
-            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_play);
-            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_play);
+            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
+            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
         } else {
-            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_pause);
-            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_pause);
+            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
+            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
         }
         startForeground(NOTIFICATION_ID, n);
         statusForeground = true;
     }
 
-    @Override
-    public void onDestroy() {
-        mediaPlayer.stop();
-        mediaPlayer.release();
-        super.onDestroy();
-    }
 
-    public class MyBinder extends Binder {           // phương thức này trả về đối tượng MyService
+    public class MyBinder extends Binder {
         public MusicService getService() {
             return MusicService.this;
         }
     }
 
     public Notification showNotification(boolean isUpdate) {
-
         bigViews = new RemoteViews(getPackageName(), R.layout.notification_view_expanded);
         views = new RemoteViews(getPackageName(), R.layout.notification_view);
         Intent intent = new Intent(getApplicationContext(), PlayMusicActivity.class);
-        intent.putExtra(PlayMusicActivity.BACK, true);      // trường hợp click button back ở playActivity
+        intent.putExtra(PlayMusicActivity.BACK, true);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         if (isPlaying()) {
-            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_play);
-            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_play);
+            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
+            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
         } else {
-            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_pause);
-            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.pb_pause);
+            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
+            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
         }
 
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -309,20 +319,22 @@ public class MusicService extends Service {
         builder.setContent(views);
         builder.setCustomBigContentView(bigViews);
 
-        bigViews.setTextViewText(R.id.tv_song_title_noti, arrSong.get(mPosition).getTitle());
-        bigViews.setTextViewText(R.id.tv_artist_noti, arrSong.get(mPosition).getArtist());
+        if (arrSong != null) {
+            bigViews.setTextViewText(R.id.tv_song_title_noti, arrSong.get(mPosition).getTitle());
+            bigViews.setTextViewText(R.id.tv_artist_noti, arrSong.get(mPosition).getArtist());
 
-        views.setTextViewText(R.id.tv_song_title_noti, arrSong.get(mPosition).getTitle());
-        views.setTextViewText(R.id.tv_artist_noti, arrSong.get(mPosition).getArtist());
+            views.setTextViewText(R.id.tv_song_title_noti, arrSong.get(mPosition).getTitle());
+            views.setTextViewText(R.id.tv_artist_noti, arrSong.get(mPosition).getArtist());
 
-        String albumPath = arrSong.get(mPosition).getAlbumImagePath();
-        if (albumPath != null) {
-            Bitmap bitmap = BitmapFactory.decodeFile(albumPath);
-            bigViews.setImageViewBitmap(R.id.img_album_art_noti, bitmap);
-            views.setImageViewBitmap(R.id.img_album_art_noti, bitmap);
-        } else {
-            bigViews.setImageViewResource(R.id.img_album_art_noti, R.drawable.adele);
-            views.setImageViewResource(R.id.img_album_art_noti, R.drawable.adele);
+            String albumPath = arrSong.get(mPosition).getAlbumImagePath();
+            if (albumPath != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(albumPath);
+                bigViews.setImageViewBitmap(R.id.img_album_art_noti, bitmap);
+                views.setImageViewBitmap(R.id.img_album_art_noti, bitmap);
+            } else {
+                bigViews.setImageViewResource(R.id.img_album_art_noti, R.drawable.ic_album_new);
+                views.setImageViewResource(R.id.img_album_art_noti, R.drawable.ic_album_new);
+            }
         }
 
         n = builder.build();

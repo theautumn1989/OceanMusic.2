@@ -16,6 +16,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 /**
  * Created by IceMan on 11/12/2016.
  */
@@ -49,7 +51,7 @@ public class FragmentArtistAdapter extends RecyclerView.Adapter<FragmentArtistAd
         holder.tvArtist.setText(mData.get(position).getName());
         holder.setId(position);
 
-        Picasso.with(mContext).load(artist.getArt()).placeholder(R.drawable.stop).into(holder.ivArt);
+        Picasso.with(mContext).load(artist.getArt()).placeholder(R.drawable.ic_artist_3).into(holder.ivArt);
     }
 
     public void filter(ArrayList<Artist> lstArtist) {
@@ -66,7 +68,7 @@ public class FragmentArtistAdapter extends RecyclerView.Adapter<FragmentArtistAd
     public class ViewHolderArtist extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView tvArtist;
         int id;
-        ImageView ivArt;
+        CircleImageView ivArt;
 
         public int getId() {
             return id;

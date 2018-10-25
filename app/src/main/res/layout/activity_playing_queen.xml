@@ -4,23 +4,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#607D8B"
+    android:background="@color/bg_queen"
     tools:context=".activities.PlayingQueenActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_playing_queue"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="Playing Queue"
-        android:background="@color/colorPrimary">
+        android:background="@color/background_toolbar"
+        android:minHeight="?attr/actionBarSize"
+        app:layout_collapseMode="pin"
+        app:title="@string/text_queen"
+        app:titleTextColor="@color/white">
 
     </android.support.v7.widget.Toolbar>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_playing_queue"
-        android:layout_below="@id/toolbar_playing_queue"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar_playing_queue">
 
     </android.support.v7.widget.RecyclerView>
+
+    <fragment
+        android:id="@+id/fm_playing_bar"
+        android:name="com.example.tomato.oceanmusic.fragments.FragmentPlayingBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>

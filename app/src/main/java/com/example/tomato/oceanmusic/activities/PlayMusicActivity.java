@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -24,6 +23,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -32,10 +32,8 @@ import android.widget.TextView;
 import com.example.tomato.oceanmusic.R;
 import com.example.tomato.oceanmusic.adapter.SongListPlayingAdapter;
 import com.example.tomato.oceanmusic.interfaces.SongPlayingOnCallBack;
-import com.example.tomato.oceanmusic.models.Album;
 import com.example.tomato.oceanmusic.models.Song;
 import com.example.tomato.oceanmusic.services.MusicService;
-import com.example.tomato.oceanmusic.utils.BlurBuilder;
 import com.example.tomato.oceanmusic.utils.CircularSeekBar;
 import com.example.tomato.oceanmusic.utils.Constants;
 import com.example.tomato.oceanmusic.utils.DataCenter;
@@ -44,13 +42,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class PlayMusicActivity extends AppCompatActivity
-        implements View.OnClickListener, SongPlayingOnCallBack, SearchView.OnQueryTextListener {
+        implements View.OnClickListener, SongPlayingOnCallBack {
 
     public static final String BACK = "back";
-
-    CollapsingToolbarLayout collapsingToolbarLayout;
+    boolean statusSearch = false;
     FloatingActionButton float_play_pause;
-    ImageView ivNext, ivpre, ivRepeat, ivShuffle, ivPlay;
+    ImageView ivNext, ivpre, ivRepeat, ivShuffle;
     RecyclerView rvListSongPlaying;
     LinearLayoutManager layoutManager;
     ArrayList<Song> arrSong;
@@ -70,6 +67,7 @@ public class PlayMusicActivity extends AppCompatActivity
         public void onReceive(Context context, Intent intent) {
             mService = (MusicService) DataCenter.instance.musicService;
             mPosition = mService.getPosition();
+            arrSong = mService.getArrSong();
             updateToolbar(mPosition);
             updateTimeSong();
         }
@@ -99,15 +97,12 @@ public class PlayMusicActivity extends AppCompatActivity
 
         showListSong();
         updateToolbar(mPosition);
-        updatePlayPauseButton();            // gọi ngay để update trạng thái button play - pause
+        updatePlayPauseButton();
         updateTimeSong();
         registerBroadcastSongComplete();
-        updateStatusRepeatShuffle();        // update  button repeat và shuffle
+        updateStatusRepeatShuffle();
         setAlbumArt();
 
-        collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
-        collapsingToolbarLayout.setTitle("Collapsing");
-        collapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(R.color.colorPrimary));
     }
 
     @Override
@@ -141,7 +136,6 @@ public class PlayMusicActivity extends AppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
-
     private void init() {
         arrSong = new ArrayList<>();
         mService = (MusicService) DataCenter.instance.musicService;
@@ -152,6 +146,7 @@ public class PlayMusicActivity extends AppCompatActivity
     private void showListSong() {
         songAdapter = new SongListPlayingAdapter(this, arrSong, this);
         rvListSongPlaying.setAdapter(songAdapter);
+        rvListSongPlaying.setHasFixedSize(true);
     }
 
     private void initEvent() {
@@ -215,7 +210,6 @@ public class PlayMusicActivity extends AppCompatActivity
             } else {
                 bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_player_bg);
             }
-            bitmap = BlurBuilder.blur(this, bitmap);
             BitmapDrawable bitmapDrawable = new BitmapDrawable(getResources(), bitmap);
             coordinatorLayout.setBackground(bitmapDrawable);
         }
@@ -231,9 +225,9 @@ public class PlayMusicActivity extends AppCompatActivity
     public void updatePlayPauseButton() {
         if (mService != null) {
             if (mService.isPlaying()) {
-                float_play_pause.setImageResource(R.drawable.pb_play);
+                float_play_pause.setImageResource(R.drawable.ic_pause_new);
             } else {
-                float_play_pause.setImageResource(R.drawable.pb_pause);
+                float_play_pause.setImageResource(R.drawable.ic_play_new);
             }
         }
     }
@@ -297,11 +291,18 @@ public class PlayMusicActivity extends AppCompatActivity
 
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
+
         mService.setStatusRepeat(false);
-        mService.playMusic(position);
         updatePlayPauseButton();
         updateToolbar(position);
         setAlbumArt();
+        if (statusSearch) {
+            String id = arrSong.get(position).getId();
+            mService.getPositionToSearch(id);
+
+        } else {
+            mService.playMusic(position);
+        }
     }
 
     @Override
@@ -317,16 +318,6 @@ public class PlayMusicActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        songAdapter.setFilter(filter(arrSong, newText));
-        return true;
-    }
 
     private ArrayList<Song> filter(ArrayList<Song> lstSong, String query) {
         query = query.toLowerCase();
@@ -338,6 +329,7 @@ public class PlayMusicActivity extends AppCompatActivity
                 filteredSongList.add(song);
             }
         }
+        setArrSong(filteredSongList);
         return filteredSongList;
     }
 
@@ -346,23 +338,56 @@ public class PlayMusicActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.menu_playing, menu);
         MenuItem item = menu.findItem(R.id.ic_search_playing);
         SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
-        searchView.setOnQueryTextListener(this);
 
+        final EditText searchPlate = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        searchPlate.setHint(R.string.search_toolbar);
+        searchPlate.setHintTextColor(ContextCompat.getColor(this, R.color.white));
+        searchPlate.setTextColor(ContextCompat.getColor(this, R.color.white));
+
+        ImageView ivClose = searchView.findViewById(android.support.v7.appcompat.R.id.search_close_btn);
+        ivClose.setColorFilter(ContextCompat.getColor(this, R.color.white));
+
+
+        ivClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showListSong();
+                searchPlate.setText("");
+            }
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return true; //do the default
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                songAdapter.setFilter(filter(arrSong, s));
+                if (s.length() == 0) {
+                    showListSong();
+                }
+                return false;
+            }
+        });
         MenuItemCompat.setOnActionExpandListener(item, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
+                statusSearch = true;
                 songAdapter.setFilter(arrSong);
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
+                statusSearch = false;
+                showListSong();
                 return true;
             }
         });
         return true;
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -398,5 +423,9 @@ public class PlayMusicActivity extends AppCompatActivity
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    public void setArrSong(ArrayList<Song> arrSong) {
+        this.arrSong = arrSong;
     }
 }

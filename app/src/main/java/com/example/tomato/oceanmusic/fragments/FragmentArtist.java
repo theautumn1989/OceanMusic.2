@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
@@ -14,6 +16,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageView;
 
 
 import com.example.tomato.oceanmusic.R;
@@ -26,7 +30,9 @@ import com.example.tomato.oceanmusic.utils.DataCenter;
 
 import java.util.ArrayList;
 
-public class FragmentArtist extends Fragment implements SearchView.OnQueryTextListener, ArtistOnCallBack {
+public class FragmentArtist extends Fragment implements ArtistOnCallBack {
+
+    public static final int COLUMS_RECYCLER = 2;
     View view;
     RecyclerView rvListArtist;
     ArrayList<Artist> listArtist;
@@ -58,20 +64,71 @@ public class FragmentArtist extends Fragment implements SearchView.OnQueryTextLi
         inflater.inflate(R.menu.menu_search_detail, menu);
         MenuItem item = menu.findItem(R.id.action_search_detail);
         SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
-        searchView.setOnQueryTextListener(this);
+        final EditText searchPlate = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        searchPlate.setHint(getString(R.string.search_toolbar));
+        searchPlate.setHintTextColor(ContextCompat.getColor(getActivity(), R.color.white));
+        searchPlate.setTextColor(ContextCompat.getColor(getActivity(), R.color.white));
 
+        ImageView ivClose = searchView.findViewById(android.support.v7.appcompat.R.id.search_close_btn);
+        ivClose.setColorFilter(ContextCompat.getColor(getActivity(), R.color.white));
+
+        ivClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showListArtist();
+                searchPlate.setText("");
+            }
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return true; //do the default
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                artistAdapter.filter(filter(listArtist, s));
+                if (s.length() == 0) {
+                    showListArtist();
+                }
+                return false;
+            }
+
+        });
         MenuItemCompat.setOnActionExpandListener(item, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
+
                 artistAdapter.filter(listArtist);
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
+
+                showListArtist();
                 return true;
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        RecyclerView.LayoutManager layoutManager;
+        switch (item.getItemId()) {
+            case R.id.list:
+                layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+                rvListArtist.setLayoutManager(layoutManager);
+                rvListArtist.setHasFixedSize(true);
+                break;
+            case R.id.gird:
+                layoutManager = new GridLayoutManager(getActivity(), COLUMS_RECYCLER);
+                rvListArtist.setLayoutManager(layoutManager);
+                rvListArtist.setHasFixedSize(true);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private ArrayList<Artist> filter(ArrayList<Artist> lstArtist, String query) {
@@ -92,16 +149,6 @@ public class FragmentArtist extends Fragment implements SearchView.OnQueryTextLi
         rvListArtist.setAdapter(artistAdapter);
     }
 
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        artistAdapter.filter(filter(listArtist, newText));
-        return true;
-    }
 
     private void initViews() {
         rvListArtist = view.findViewById(R.id.rv_artist_list);
@@ -115,6 +162,5 @@ public class FragmentArtist extends Fragment implements SearchView.OnQueryTextLi
         mService = (MusicService) DataCenter.instance.musicService;
         mService.setIDArtist(listArtist.get(position).getId());
         getActivity().startActivity(intent);
-
     }
 }

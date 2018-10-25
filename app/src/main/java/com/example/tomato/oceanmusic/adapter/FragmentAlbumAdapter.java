@@ -16,6 +16,8 @@ import com.example.tomato.oceanmusic.models.Album;
 
 import java.util.ArrayList;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 /**
  * Created by IceMan on 12/8/2016.
  */
@@ -51,7 +53,7 @@ public class FragmentAlbumAdapter extends RecyclerView.Adapter<FragmentAlbumAdap
             Glide.with(mContext).load(path).into(holder.ivImgAlbum);
 
         } else {
-            holder.ivImgAlbum.setImageResource(R.drawable.stop);
+            holder.ivImgAlbum.setImageResource(R.drawable.ic_album_4);
         }
         holder.tvAlbumTitle.setText(item.getTitle());
         holder.tvArtist.setText(item.getArtist());
@@ -70,7 +72,7 @@ public class FragmentAlbumAdapter extends RecyclerView.Adapter<FragmentAlbumAdap
     }
 
     public class ViewHolderAlbumGrid extends RecyclerView.ViewHolder implements View.OnClickListener {
-        ImageView ivImgAlbum;
+        CircleImageView ivImgAlbum;
         TextView tvAlbumTitle;
         TextView tvArtist;
         int id;

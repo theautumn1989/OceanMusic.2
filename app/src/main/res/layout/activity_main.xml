@@ -8,60 +8,57 @@
     android:fitsSystemWindows="true"
     tools:context=".activities.MainActivity">
 
-    <Button
-        android:background="#FF9800"
-        android:id="@+id/btn_play"
-        android:textColor="#FFF3E0"
-        android:textSize="45dp"
-        android:text="WELCOM FROM OCEN MUSIC "
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <ImageView
-        android:id="@+id/iv_back_ground_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="fitXY" />
-
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/toolbar_transparent"
-        android:minHeight="?attr/actionBarSize">
+        android:background="@color/background_toolbar"
+        android:minHeight="?attr/actionBarSize"
+        android:outlineAmbientShadowColor="@color/white"
+        android:outlineSpotShadowColor="@color/white"
+        app:subtitleTextColor="@color/white"
+        app:titleTextColor="@color/white">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
             android:textColor="@color/white"
-            android:textSize="@dimen/text_size_big" />
+            android:textSize="@dimen/text_size_big"
+            android:textStyle="bold" />
     </android.support.v7.widget.Toolbar>
 
     <android.support.design.widget.TabLayout
         android:id="@+id/tablayout_main"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="@dimen/layout_height_48"
         android:layout_below="@+id/toolbar_main"
-        android:background="@color/pager_background"
+        android:background="@color/background_table_layout"
+        android:outlineAmbientShadowColor="@color/white"
+        android:outlineSpotShadowColor="@color/white"
+        app:tabIndicatorColor="@color/white"
+        app:tabRippleColor="@color/white"
+        app:tabSelectedTextColor="@color/white"
         app:tabTextColor="@color/white">
 
     </android.support.design.widget.TabLayout>
 
     <android.support.v4.view.ViewPager
+
         android:id="@+id/viewpager_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/fm_playing_bar"
         android:layout_below="@+id/tablayout_main"
-        android:background="@color/pager_background"></android.support.v4.view.ViewPager>
+        android:background="@color/white"></android.support.v4.view.ViewPager>
 
     <fragment
-        android:layout_alignParentBottom="true"
-        android:name="com.example.tomato.oceanmusic.fragments.FragmentPlayingBar"
+
         android:id="@+id/fm_playing_bar"
+        android:name="com.example.tomato.oceanmusic.fragments.FragmentPlayingBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
 
 
 </RelativeLayout>

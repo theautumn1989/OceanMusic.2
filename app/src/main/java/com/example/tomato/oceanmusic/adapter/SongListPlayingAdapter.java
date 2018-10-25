@@ -17,6 +17,8 @@ import com.example.tomato.oceanmusic.models.Song;
 
 import java.util.ArrayList;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 
 /**
  * Created by IceMan on 11/20/2016.
@@ -38,7 +40,7 @@ public class SongListPlayingAdapter extends RecyclerView.Adapter<SongListPlaying
 
     @Override
     public ViewHolderSongPlaying onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mLayoutInflater.inflate(R.layout.item_song_playing, null);
+        View view = mLayoutInflater.inflate(R.layout.item_song_playing, parent, false);
         ViewHolderSongPlaying holder = new ViewHolderSongPlaying(view);
         return holder;
     }
@@ -57,7 +59,7 @@ public class SongListPlayingAdapter extends RecyclerView.Adapter<SongListPlaying
         if (path != null) {
             Glide.with(mContext).load(path).into(holder.imgAlbum);
         } else {
-            holder.imgAlbum.setImageResource(R.drawable.ic_item_beats);
+            holder.imgAlbum.setImageResource(R.drawable.ic_album_new);
         }
         holder.tvTitle.setText(item.getTitle());
         holder.tvArtist.setText(item.getArtist());
@@ -71,7 +73,7 @@ public class SongListPlayingAdapter extends RecyclerView.Adapter<SongListPlaying
 
     public class ViewHolderSongPlaying extends RecyclerView.ViewHolder implements View.OnClickListener {
         int id;
-        private ImageView imgAlbum;
+        CircleImageView imgAlbum;
         private TextView tvTitle;
         private TextView tvArtist;
 

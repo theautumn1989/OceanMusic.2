@@ -34,7 +34,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
     @Override
     public ViewHolderSong onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mLayoutInflater.inflate(R.layout.item_song, null);
+        View view = mLayoutInflater.inflate(R.layout.item_song, parent, false);
         ViewHolderSong holder = new ViewHolderSong(view);
         return holder;
     }

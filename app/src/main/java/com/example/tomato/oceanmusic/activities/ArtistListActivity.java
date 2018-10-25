@@ -1,13 +1,17 @@
 package com.example.tomato.oceanmusic.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -25,16 +29,18 @@ import java.util.ArrayList;
 
 public class ArtistListActivity extends AppCompatActivity implements SongOnCallBack {
 
+    public static final int DATA_TYPE_SONG_OF_ARTIST = 3;
+
     FragmentPlayingBar fmPlayingBar;
 
     TextView tvArtistName;
     RecyclerView rvListSong;
     SongListAdapter mSongAdapter;
     ArrayList<Song> mListSong;
-    ImageView ivBackGround;
     ImageView ivArtist;
 
     MusicService mService;
+    boolean statusSearch = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,9 +55,13 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initViews();
-
         getDataFromIntentAndShow();
-        // DataCenter.instance.setDefaultWallpaper(ivBackGround);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getDataFromIntentAndShow();
     }
 
     private void getDataFromIntentAndShow() {
@@ -59,24 +69,26 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
         mService = (MusicService) DataCenter.instance.musicService;
         int idArtist = mService.getIDArtist();
         mListSong = DataCenter.instance.getListSongOfArtist(idArtist);
-        String path = mListSong.get(0).getAlbumImagePath();
-        if (path != null) {
-            Glide.with(this).load(path).into(ivArtist);
 
-        } else {
-            ivArtist.setImageResource(R.drawable.stop);
+        if (mListSong != null) {
+            String path = mListSong.get(0).getAlbumImagePath();
+            if (path != null) {
+                Glide.with(this).load(path).into(ivArtist);
+
+            } else {
+                ivArtist.setImageResource(R.drawable.bg_playing_3);
+            }
+
+            mSongAdapter = new SongListAdapter(this, mListSong, this);
+            rvListSong.setAdapter(mSongAdapter);
+            tvArtistName.setText(mListSong.get(0).getArtist());
         }
-
-        mSongAdapter = new SongListAdapter(this, mListSong, this);
-        rvListSong.setAdapter(mSongAdapter);
-        tvArtistName.setText(mListSong.get(0).getArtist());
     }
 
     private void initViews() {
         fmPlayingBar = (FragmentPlayingBar) getFragmentManager().findFragmentById(R.id.fm_playing_bar);
         tvArtistName = findViewById(R.id.artist_name_toolbar);
         rvListSong = findViewById(R.id.rv_artist_list_play);
-        ivBackGround = findViewById(R.id.iv_back_ground_artist);
         ivArtist = findViewById(R.id.iv_artist);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         rvListSong.setLayoutManager(layoutManager);
@@ -96,9 +108,90 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
     public void onItemClicked(int position, boolean isLongClick) {
 
         mService = (MusicService) DataCenter.instance.musicService;
-        mService.setmType(3);
-        mService.updateData(3);
-        mService.playMusic(position);
+        mService.setmType(DATA_TYPE_SONG_OF_ARTIST);
+        mService.updateData(DATA_TYPE_SONG_OF_ARTIST);
         mService.setStatusRepeat(false);
+        if (statusSearch) {
+            String id = mListSong.get(position).getId();
+            mService.getPositionToSearch(id);
+
+        } else {
+            mService.playMusic(position);
+        }
     }
+
+    private ArrayList<Song> filter(ArrayList<Song> lstSong, String query) {
+        query = query.toLowerCase();
+        ArrayList<Song> filteredSongList = new ArrayList<>();
+
+        for (Song song : lstSong) {
+            String text = song.getTitle().toLowerCase();
+            if (text.contains(query)) {
+                filteredSongList.add(song);
+            }
+        }
+        setmListSong(filteredSongList);
+        return filteredSongList;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_playing, menu);
+        MenuItem item = menu.findItem(R.id.ic_search_playing);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
+
+        final EditText searchPlate = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        searchPlate.setHint(R.string.search_toolbar);
+        searchPlate.setHintTextColor(ContextCompat.getColor(this, R.color.white));
+        searchPlate.setTextColor(ContextCompat.getColor(this, R.color.white));
+
+        ImageView ivClose = searchView.findViewById(android.support.v7.appcompat.R.id.search_close_btn);
+        ivClose.setColorFilter(ContextCompat.getColor(this, R.color.white));
+
+        ivClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getDataFromIntentAndShow();
+                searchPlate.setText("");
+            }
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return true; //do the default
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                mSongAdapter.setFilter(filter(mListSong, s));
+                if (s.length() == 0) {
+                    getDataFromIntentAndShow();
+                }
+                return false;
+            }
+
+        });
+        MenuItemCompat.setOnActionExpandListener(item, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                statusSearch = true;
+                mSongAdapter.setFilter(mListSong);
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                statusSearch = false;
+                getDataFromIntentAndShow();
+                return true;
+            }
+        });
+        return true;
+    }
+
+    public void setmListSong(ArrayList<Song> mListSong) {
+        this.mListSong = mListSong;
+    }
+
 }

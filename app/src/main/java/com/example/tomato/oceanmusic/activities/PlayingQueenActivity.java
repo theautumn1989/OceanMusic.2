@@ -1,7 +1,5 @@
 package com.example.tomato.oceanmusic.activities;
 
-
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,6 +9,7 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 
 import com.example.tomato.oceanmusic.R;
 import com.example.tomato.oceanmusic.adapter.SongListPlayingAdapter;
+import com.example.tomato.oceanmusic.fragments.FragmentPlayingBar;
 import com.example.tomato.oceanmusic.interfaces.ItemTouchListener;
 import com.example.tomato.oceanmusic.interfaces.SongPlayingOnCallBack;
 import com.example.tomato.oceanmusic.models.Song;
@@ -23,6 +22,7 @@ import java.util.Collections;
 
 public class PlayingQueenActivity extends AppCompatActivity implements SongPlayingOnCallBack {
 
+    FragmentPlayingBar fmPlayingBar;
     SongListPlayingAdapter adapter;
     RecyclerView recyclerView;
     MusicService mService;
@@ -52,6 +52,7 @@ public class PlayingQueenActivity extends AppCompatActivity implements SongPlayi
     }
 
     private void init() {
+        fmPlayingBar = (FragmentPlayingBar) getFragmentManager().findFragmentById(R.id.fm_playing_bar);
         recyclerView = findViewById(R.id.rv_playing_queue);
         adapter = new SongListPlayingAdapter(PlayingQueenActivity.this, arrSong, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
@@ -99,10 +100,8 @@ public class PlayingQueenActivity extends AppCompatActivity implements SongPlayi
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
 
-        Intent intent = new Intent(this, PlayMusicActivity.class);
         mService = (MusicService) DataCenter.instance.musicService;
         mService.setPosition(position);
         mService.playMusic(position);
-        startActivity(intent);
     }
 }

@@ -23,6 +23,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -37,20 +39,18 @@ import com.example.tomato.oceanmusic.utils.DataCenter;
 
 import java.util.ArrayList;
 
-
 public class MainActivity extends AppCompatActivity {
 
+    public static final int VP_PAGE_LIMIT = 3;
     public static final int PERMISSION_KEY = 1989;
 
     FragmentPlayingBar fmPlayingBar;
     MusicService mService;
     int mPosition = -1;
-
     ArrayList<Song> arrSong;
     ViewPager vpMain;
     TabLayout tabMain;
-    Button btnPlay;
-    boolean statusPlayApp = false;
+
     boolean mIsBound = false;
 
     ServiceConnection connection = new ServiceConnection() {
@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
             MusicService.MyBinder binder = (MusicService.MyBinder) service;
             mService = binder.getService();
             DataCenter.instance.musicService = mService;
+            //   mService = (MusicService) DataCenter.instance.musicService;
         }
     };
 
@@ -71,56 +72,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d("ServiceMusic", "init Activity");
         initPermission();
-        btnPlay = findViewById(R.id.btn_play);
+//        DataCenter.setStatusBarTranslucent(true, this);
+
+        Log.d("123", "onCreate: ");
+    }
+
+    public void initData() {
+        DataCenter.instance.mainActivity = this;
         mService = new MusicService();
         mService = (MusicService) DataCenter.instance.musicService;
 
         if (mService != null) {
+            Log.d("ServiceMusic", "init");
             mPosition = mService.getPosition();
-            statusPlayApp = mService.getStatusPlayApp();
-
         } else {
+            Log.d("ServiceMusic", "init");
             initService();
         }
-        DataCenter.instance.mainActivity = this;
-
-        if (statusPlayApp) {
-
-            initToolbar();
-            initView();
-            init();
-            btnPlay.setVisibility(View.INVISIBLE);
-        }
-
-        btnPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                initToolbar();
-                initView();
-                init();
-                mService.setStatusPlayApp(true);
-                mService.updateData(1);
-                mService.setmType(1);
-                btnPlay.setVisibility(View.INVISIBLE);
-            }
-        });
-
     }
 
     public void initPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                //Permisson don't granted
-                if (shouldShowRequestPermissionRationale(
-                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                }
-                // Permisson don't granted and dont show dialog again.
-                else {
-                }
                 //Register permission
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_KEY);
+
+            } else {
+
+                initToolbar();
+                initData();
+                initView();
+                init();
             }
+        } else {
+            initToolbar();
+            initData();
+            initView();
+            init();
         }
     }
 
@@ -132,7 +122,14 @@ public class MainActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    initToolbar();
+                    initData();
+                    initView();
+                    init();
                 } else {
+                    //  Toast.makeText(this, ""+R.string.notification_permissions, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "người dùng không cấp quyền cho ứng dụng", Toast.LENGTH_LONG).show();
+                    android.os.Process.killProcess(android.os.Process.myPid());
                 }
                 return;
             }
@@ -142,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
     private void initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
+        toolbar.setOverflowIcon(ContextCompat.getDrawable(this, R.drawable.abc_ic_menu_moreoverflow_mtrl_alpha));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
 
@@ -153,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
         vpMain.setAdapter(adapter);
         tabMain.setupWithViewPager(vpMain);
         vpMain.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabMain));
-        vpMain.setOffscreenPageLimit(3);
+        vpMain.setOffscreenPageLimit(VP_PAGE_LIMIT);
         tabMain.setTabsFromPagerAdapter(adapter);
     }
 
@@ -174,16 +172,66 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        Log.d("123", "onDestroy: ");
+
         mService = (MusicService) DataCenter.instance.musicService;
-        if (mService.getStatusForegound()) {
-            DataCenter.instance.mainActivity = null;
-        } else {
-            mService.stopSelf();
-        }
+
         if (mIsBound) {
             unbindService(connection);
             mIsBound = false;
         }
+        if (mService.isPlaying()) {
+            DataCenter.instance.mainActivity = null;
+        } else {
+            mService.stopSelf();
+        }
+    }
 
+//    @Override
+//    public void onBackPressed() {
+//        mService = (MusicService) DataCenter.instance.musicService;
+//
+//        if (mIsBound) {
+//            unbindService(connection);
+//            mIsBound = false;
+//        }
+//        if (mService.isPlaying()) {
+//            DataCenter.instance.mainActivity = null;
+//        } else {
+//            mService.stopSelf();
+//        }
+//
+//        android.os.Process.killProcess(android.os.Process.myPid());
+//
+//    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("123", "onResume: ");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d("123", "onRestart: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("123", "onPause: ");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("123", "onStop: ");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("123", "onStart: ");
     }
 }

@@ -1,23 +1,20 @@
 package com.example.tomato.oceanmusic.fragments;
 
-import android.Manifest;
+
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Build;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,10 +22,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import com.example.tomato.oceanmusic.R;
-import com.example.tomato.oceanmusic.activities.MainActivity;
 import com.example.tomato.oceanmusic.activities.PlayMusicActivity;
 import com.example.tomato.oceanmusic.models.Song;
 import com.example.tomato.oceanmusic.services.MusicService;
@@ -38,18 +34,19 @@ import com.example.tomato.oceanmusic.utils.DataCenter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class FragmentPlayingBar extends Fragment implements View.OnClickListener {
 
     MusicService mService;
     View view;
     LinearLayout llPlayingBar;
     SeekBar sbSong;
-    TextView tvTimePlay, tvTimeTotal, tvSongTitle, tvSongArtist;
-    ImageView ivSong, ivPlayPause;
+    TextView tvSongTitle, tvSongArtist;
+    ImageView ivPlayPause;
+    CircleImageView ciSong;
     ArrayList<Song> arrSong;
-
     int mPosition = -1;
-
 
     BroadcastReceiver broadcastReceiverUpdatePlaying = new BroadcastReceiver() {
         @Override
@@ -80,7 +77,6 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_playing_bar, container, false);
-
         mService = (MusicService) DataCenter.instance.musicService;
         DataCenter.instance.fmPlayingBar = this;
 
@@ -103,16 +99,14 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
         arrSong = new ArrayList<>();
         llPlayingBar = view.findViewById(R.id.ll_playing_bar);
         sbSong = view.findViewById(R.id.sb_song);
-        tvTimePlay = view.findViewById(R.id.tv_time_played);
-        tvTimeTotal = view.findViewById(R.id.tv_time_total);
         tvSongTitle = view.findViewById(R.id.tv_song_title);
         tvSongArtist = view.findViewById(R.id.tv_song_artist);
-        ivSong = view.findViewById(R.id.iv_song);
+        ciSong = view.findViewById(R.id.iv_song);
         ivPlayPause = view.findViewById(R.id.iv_play_pause);
     }
 
     public void initEvent() {
-        ivSong.setOnClickListener(this);
+        ciSong.setOnClickListener(this);
         llPlayingBar.setOnClickListener(this);
         ivPlayPause.setOnClickListener(this);
         sbSong.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -126,7 +120,10 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mService.seekTo(seekBar.getProgress());
+                mService = (MusicService) DataCenter.instance.musicService;
+                if (mService.getStatusPlayPause()) {
+                    mService.seekTo(seekBar.getProgress());
+                }
             }
         });
     }
@@ -134,17 +131,14 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
     public void updatePlayPauseButton() {
         if (mService != null) {
             if (mService.isPlaying()) {
-                ivPlayPause.setImageResource(R.drawable.pb_play);
+                ivPlayPause.setImageResource(R.drawable.ic_pause_bar);
             } else {
-                ivPlayPause.setImageResource(R.drawable.pb_pause);
+                ivPlayPause.setImageResource(R.drawable.ic_play_bar);
             }
         }
     }
 
     private void setTimeTotal() {
-        SimpleDateFormat dinhDangGio = new SimpleDateFormat("mm:ss");
-        tvTimeTotal.setText(dinhDangGio.format(mService.getDurationMedia()));
-
         sbSong.setMax(mService.getDurationMedia());
     }
 
@@ -154,17 +148,14 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                SimpleDateFormat dinhDangGio = new SimpleDateFormat("mm:ss");
-                tvTimePlay.setText(dinhDangGio.format(mService.getCurrentMedia()));
-
+                if(getActivity()==null || getActivity().isFinishing()) {
+                    return;
+                }
                 sbSong.setProgress(mService.getCurrentMedia());
-
                 mService.nextAutoPlayMusic();
-
                 handler.postDelayed(this, 500);
             }
         }, 100);
-
     }
 
     public void updatePlayingBar(int position) {
@@ -178,9 +169,9 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
             bitmap = BitmapFactory.decodeFile(albumPath);
 
         } else {
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.adele);
+            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_avatar_bar);
         }
-        ivSong.setImageBitmap(bitmap);
+        ciSong.setImageBitmap(bitmap);
         tvSongTitle.setText(arrSong.get(position).getTitle());
         tvSongArtist.setText(arrSong.get(position).getArtist());
 

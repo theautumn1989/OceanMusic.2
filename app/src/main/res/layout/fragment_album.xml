@@ -2,15 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/pager_background"
+    android:background="@color/white"
     tools:context="fragments.FragmentAlbum">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_album_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </android.support.v7.widget.RecyclerView>
+        android:layout_height="match_parent"></android.support.v7.widget.RecyclerView>
 
 
 </RelativeLayout>

@@ -12,5 +12,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello </string>
     <string name="title_activity_artist_list">ArtistList</string>
+    <string name="text_00">0.00</string>
+    <string name="text_queen">Playing Queue</string>
+    <string name="notification_permissions">Người dùng ko cấp quyền cho ứng dụng !</string>
+    <string name="search_toolbar">Search</string>
 
 </resources>
