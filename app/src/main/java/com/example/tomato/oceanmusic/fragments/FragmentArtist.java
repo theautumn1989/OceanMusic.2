@@ -22,6 +22,7 @@ import android.widget.ImageView;
 
 import com.example.tomato.oceanmusic.R;
 import com.example.tomato.oceanmusic.activities.ArtistListActivity;
+import com.example.tomato.oceanmusic.activities.MainActivity;
 import com.example.tomato.oceanmusic.adapter.FragmentArtistAdapter;
 import com.example.tomato.oceanmusic.interfaces.ArtistOnCallBack;
 import com.example.tomato.oceanmusic.models.Artist;
@@ -145,14 +146,16 @@ public class FragmentArtist extends Fragment implements ArtistOnCallBack {
 
     private void showListArtist() {
         listArtist = DataCenter.instance.getListArtist();
-        artistAdapter = new FragmentArtistAdapter(getActivity(), listArtist, this);
-        rvListArtist.setAdapter(artistAdapter);
+        if (listArtist != null && listArtist.size() > 0) {
+            artistAdapter = new FragmentArtistAdapter(getActivity(), listArtist, this);
+            rvListArtist.setAdapter(artistAdapter);
+        }
     }
 
 
     private void initViews() {
         rvListArtist = view.findViewById(R.id.rv_artist_list);
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getActivity(), 2);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getActivity(), COLUMS_RECYCLER);
         rvListArtist.setLayoutManager(layoutManager);
     }
 
@@ -160,7 +163,9 @@ public class FragmentArtist extends Fragment implements ArtistOnCallBack {
     public void onItemClicked(int position, boolean isLongClick) {
         Intent intent = new Intent(getActivity(), ArtistListActivity.class);
         mService = (MusicService) DataCenter.instance.musicService;
-        mService.setIDArtist(listArtist.get(position).getId());
-        getActivity().startActivity(intent);
+        if (mService != null) {
+            mService.setIDArtist(listArtist.get(position).getId());
+            getActivity().startActivity(intent);
+        }
     }
 }

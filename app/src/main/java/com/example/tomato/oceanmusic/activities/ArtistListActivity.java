@@ -1,5 +1,7 @@
 package com.example.tomato.oceanmusic.activities;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -11,6 +13,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,15 +50,18 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artist);
 
+        initToolbar();
+        initViews();
+        getDataFromIntentAndShow();
+    }
+
+    public void initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar_artist);
         setSupportActionBar(toolbar);
         toolbar.setOverflowIcon(ContextCompat.getDrawable(this, R.drawable.abc_ic_menu_moreoverflow_mtrl_alpha));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        initViews();
-        getDataFromIntentAndShow();
     }
 
     @Override
@@ -67,10 +73,12 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
     private void getDataFromIntentAndShow() {
 
         mService = (MusicService) DataCenter.instance.musicService;
-        int idArtist = mService.getIDArtist();
-        mListSong = DataCenter.instance.getListSongOfArtist(idArtist);
+        if (mService != null) {
+            int idArtist = mService.getIDArtist();
+            mListSong = DataCenter.instance.getListSongOfArtist(idArtist);
+        }
 
-        if (mListSong != null) {
+        if (mListSong != null && mListSong.size() > 0) {
             String path = mListSong.get(0).getAlbumImagePath();
             if (path != null) {
                 Glide.with(this).load(path).into(ivArtist);
@@ -78,7 +86,6 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
             } else {
                 ivArtist.setImageResource(R.drawable.bg_playing_3);
             }
-
             mSongAdapter = new SongListAdapter(this, mListSong, this);
             rvListSong.setAdapter(mSongAdapter);
             tvArtistName.setText(mListSong.get(0).getArtist());
@@ -108,16 +115,40 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
     public void onItemClicked(int position, boolean isLongClick) {
 
         mService = (MusicService) DataCenter.instance.musicService;
-        mService.setmType(DATA_TYPE_SONG_OF_ARTIST);
-        mService.updateData(DATA_TYPE_SONG_OF_ARTIST);
-        mService.setStatusRepeat(false);
-        if (statusSearch) {
-            String id = mListSong.get(position).getId();
-            mService.getPositionToSearch(id);
+        if (mService != null) {
+            mService.setmType(DATA_TYPE_SONG_OF_ARTIST);
+            mService.updateData(DATA_TYPE_SONG_OF_ARTIST);
+            mService.setStatusRepeat(false);
+            if (statusSearch) {
+                String id = mListSong.get(position).getId();
+                mService.getPositionToSearch(id);
 
-        } else {
-            mService.playMusic(position);
+                updateSearchActivity(false);
+                getDataFromIntentAndShow();
+                initToolbar();
+
+            } else {
+                mService.playMusic(position);
+            }
         }
+    }
+
+    @SuppressLint("RestrictedApi")
+    public void updateSearchActivity(boolean status) {
+        if (status) {
+            ivArtist.setVisibility(View.GONE);
+        } else {
+            ivArtist.setVisibility(View.VISIBLE);
+            hideSoftKeyboard(this);
+        }
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
     }
 
     private ArrayList<Song> filter(ArrayList<Song> lstSong, String query) {
@@ -177,6 +208,7 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
             public boolean onMenuItemActionExpand(MenuItem item) {
                 statusSearch = true;
                 mSongAdapter.setFilter(mListSong);
+                updateSearchActivity(true);
                 return true;
             }
 
@@ -184,6 +216,7 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 statusSearch = false;
                 getDataFromIntentAndShow();
+                updateSearchActivity(false);
                 return true;
             }
         });

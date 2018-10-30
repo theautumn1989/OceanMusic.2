@@ -17,8 +17,9 @@ public class PrevMusicReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         MusicService musicService = (MusicService) DataCenter.instance.musicService;
 
-        musicService.backMusic();
-
-        musicService.showNotification(true);
+        if (musicService != null) {
+            musicService.backMusic();
+            musicService.showNotification();
+        }
     }
 }

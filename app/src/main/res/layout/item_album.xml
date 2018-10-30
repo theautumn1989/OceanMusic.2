@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="@dimen/layout_height_48"
-    android:background="?attr/selectableItemBackground"
-    android:orientation="vertical">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/dimen_5dp"
+    android:padding="@dimen/dimen_2dp">
 
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/iv_album_img_item"
+        android:layout_width="@dimen/dimen_170"
+        android:layout_height="@dimen/dimen_170"
+        android:layout_centerInParent="true"
+        android:src="@drawable/ic_album_4" />
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/layout_height_48">
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:alpha="0.4"
+        android:background="@color/bg_item_album"
+        android:minHeight="@dimen/dimen_60dp"></LinearLayout>
 
-        <ImageView
-            android:id="@+id/iv_album_img_item"
-            android:layout_width="@dimen/layout_height_48"
-            android:layout_height="@dimen/layout_height_48"
-            android:src="@mipmap/ic_launcher" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:minHeight="@dimen/dimen_60dp"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tv_album_title_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_8dp"
-            android:layout_toRightOf="@id/iv_album_img_item"
             android:maxLines="1"
-            android:paddingLeft="@dimen/dimen_8dp"
             android:text="@string/album_list"
             android:textColor="@color/white"
-            android:textSize="@dimen/text_size_normal" />
+            android:textSize="@dimen/dimen_14dp" />
 
         <TextView
             android:id="@+id/tv_artist_album_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tv_album_title_item"
-            android:layout_marginTop="@dimen/dimen_4dp"
-            android:layout_toRightOf="@id/iv_album_img_item"
+            android:layout_marginTop="@dimen/dimen_8dp"
             android:maxLines="1"
-            android:paddingLeft="@dimen/dimen_8dp"
             android:text="@string/artist_list"
             android:textColor="@color/white"
-            android:textSize="@dimen/text_size_small" />
-    </RelativeLayout>
+            android:textSize="@dimen/dimen_14dp" />
+    </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_1dp"
-        android:layout_alignParentBottom="true"
-        android:background="@color/white" />
 </RelativeLayout>

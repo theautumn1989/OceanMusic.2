@@ -26,13 +26,6 @@ public class Album implements Parcelable {
         this.albumArtPath = albumArtPath;
     }
 
-    public Album(int id, String title, String artist, ArrayList<Song> lstSong, Bitmap albumArt) {
-        this.id = id;
-        this.title = title;
-        this.artist = artist;
-        this.lstSong = lstSong;
-        this.albumArt = albumArt;
-    }
 
     protected Album(Parcel in) {
         id = in.readInt();

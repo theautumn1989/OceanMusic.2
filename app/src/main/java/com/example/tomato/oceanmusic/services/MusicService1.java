@@ -14,18 +14,15 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
-
 
 import com.example.tomato.oceanmusic.R;
 import com.example.tomato.oceanmusic.activities.MainActivity;
 import com.example.tomato.oceanmusic.activities.PlayingActivity;
 import com.example.tomato.oceanmusic.fragments.FragmentPlayingBar;
 import com.example.tomato.oceanmusic.models.Song;
-import com.example.tomato.oceanmusic.receivers.NextMusicReceiver;
-import com.example.tomato.oceanmusic.receivers.PlayPauseMusicReceiver;
-import com.example.tomato.oceanmusic.receivers.PrevMusicReceiver;
 import com.example.tomato.oceanmusic.utils.Constants;
 import com.example.tomato.oceanmusic.utils.DataCenter;
 
@@ -33,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 
-public class MusicService extends Service {
+public class MusicService1 extends Service {
 
     public static final int DATA_TYPE_SONG_ALL = 1;
     public static final int DATA_TYPE_SONG_OF_ALBUM = 2;
@@ -55,8 +52,8 @@ public class MusicService extends Service {
     NotificationManager notificationManager;
     String channelId = "default_channel_id";
     String channelDescription = "Default Channel";
-    Notification n;
 
+    Notification n;
     int mPosition = -1;
     int mRepeatPosition;
     boolean statusForeground = false;
@@ -68,11 +65,12 @@ public class MusicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("MusicServiceMedia", "Create");
+        Log.d("MusicServiceMedia","Create");
         mediaPlayer = new MediaPlayer();
         arrSong = new ArrayList<>();
         binder = new MyBinder();
         updateData(mType);
+
     }
 
     @Override
@@ -101,14 +99,10 @@ public class MusicService extends Service {
                 arrSong = DataCenter.instance.getListSong();
                 break;
             case DATA_TYPE_SONG_OF_ALBUM:
-                if (IDAlbum > -1) {
-                    arrSong = DataCenter.instance.getListSongOfAlbum(IDAlbum);
-                }
+                arrSong = DataCenter.instance.getListSongOfAlbum(IDAlbum);
                 break;
             case DATA_TYPE_SONG_OF_ARSITS:
-                if (IDArtist > -1) {
-                    arrSong = DataCenter.instance.getListSongOfArtist(IDArtist);
-                }
+                arrSong = DataCenter.instance.getListSongOfArtist(IDArtist);
                 break;
             default:
                 break;
@@ -117,31 +111,30 @@ public class MusicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+     //   notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (ACTION_STOP_SERVICE.equals(intent.getAction())) {
-            if (!mediaPlayer.isPlaying()) {
-                PlayingActivity musicActivity = (PlayingActivity) DataCenter.instance.playActivity;
-                MainActivity mainActivity = (MainActivity) DataCenter.instance.mainActivity;
-                FragmentPlayingBar fmPlayingBar = DataCenter.instance.fmPlayingBar;
+            PlayingActivity musicActivity = (PlayingActivity) DataCenter.instance.playActivity;
+            MainActivity mainActivity = (MainActivity) DataCenter.instance.mainActivity;
+            FragmentPlayingBar fmPlayingBar = DataCenter.instance.fmPlayingBar;
 
-                if (musicActivity == null && mainActivity == null) {
-                    stopSelf();
-                    android.os.Process.killProcess(android.os.Process.myPid());     // kill app
-                }
-                pauseMusic();
-                stopForeground(true);
-                statusForeground = false;
+            if (musicActivity == null && mainActivity == null) {
+                stopSelf();
+            }
+            pauseMusic();
+            stopForeground(true);
+            statusForeground = false;
 
-                if (fmPlayingBar != null) {
-                    fmPlayingBar.updatePlayPauseButton();
-                }
-                if (musicActivity != null) {
-                    musicActivity.updatePlayPauseButton();
-                }
+            if (fmPlayingBar != null) {
+                fmPlayingBar.updatePlayPauseButton();
+            }
+            if (musicActivity != null) {
+                musicActivity.updatePlayPauseButton();
             }
         }
         return START_STICKY;
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -167,7 +160,7 @@ public class MusicService extends Service {
         releaseMusic();
         mediaPlayer = new MediaPlayer();
         this.mPosition = position;
-        if (arrSong != null && arrSong.size() > 0) {
+        if(arrSong != null && arrSong.size() > 0){
             mediaPlayer = MediaPlayer.create(this, Uri.parse("file://" + arrSong.get(position).getPath()));
             mediaPlayer.setLooping(true);
             mediaPlayer.start();
@@ -176,7 +169,13 @@ public class MusicService extends Service {
         Intent intent = new Intent(Constants.ACTION_COMPLETE_SONG);
         sendBroadcast(intent);
 
-        showNotification();
+        showNotification(true);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+//            showNotification(true);
+//        else
+//            startForeground(1, new Notification());
+
+
 
         if (!getStatusPlayPause()) {
             setStatusPlayPause(true);
@@ -184,17 +183,15 @@ public class MusicService extends Service {
     }
 
     public void nextAutoPlayMusic() {
-        if (mediaPlayer != null) {
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    nextMusic();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {    // phương thức kiểm tra khi kết thúc bài hát
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                nextMusic();
 
-                    Intent intent = new Intent(Constants.ACTION_COMPLETE_SONG);
-                    sendBroadcast(intent);
-                }
-            });
-        }
+                Intent intent = new Intent(Constants.ACTION_COMPLETE_SONG);
+                sendBroadcast(intent);
+            }
+        });
     }
 
     public void playPauseMusic() {
@@ -208,10 +205,11 @@ public class MusicService extends Service {
     private void releaseMusic() {
         try {
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                Log.d("1234", "releaseMusic: ");
                 stopMusic();
                 mediaPlayer.release();
             }
-        } catch (IllegalStateException e) {
+        }catch (IllegalStateException e){
 
         }
     }
@@ -238,41 +236,37 @@ public class MusicService extends Service {
 
     public void nextMusic() {
         statusRepeat = true;
-        if (arrSong != null && arrSong.size() > 0) {
-            if (isShuffle) {
-                Random r = new Random();
-                int newPosition = r.nextInt(arrSong.size());
-                mPosition = newPosition;
-            } else {
-                mPosition++;
-            }
-            if (mPosition > arrSong.size() - 1) {
-                mPosition = 0;
-            }
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-            }
-            playMusic(mPosition);
-            setPosition(mPosition);
+        if (isShuffle) {
+            Random r = new Random();
+            int newPosition = r.nextInt(arrSong.size());
+            mPosition = newPosition;
+        } else {
+            mPosition++;
         }
+        if (mPosition > arrSong.size() - 1) {
+            mPosition = 0;
+        }
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+        }
+        playMusic(mPosition);
+        setPosition(mPosition);
     }
 
     public void backMusic() {
-        if (arrSong != null && arrSong.size() > 0) {
-            if (isShuffle) {
-                Random r = new Random();
-                int newPosition = r.nextInt(arrSong.size());
-                mPosition = newPosition;
+        if (isShuffle) {
+            Random r = new Random();
+            int newPosition = r.nextInt(arrSong.size());
+            mPosition = newPosition;
+        } else {
+            if (mPosition == 0) {
+                mPosition = arrSong.size();
             } else {
-                if (mPosition == 0) {
-                    mPosition = arrSong.size();
-                } else {
-                    mPosition--;
-                }
+                mPosition--;
             }
-            playMusic(mPosition);
-            setPosition(mPosition);
         }
+        playMusic(mPosition);
+        setPosition(mPosition);
     }
 
     public void changePlayPauseState() {
@@ -289,25 +283,55 @@ public class MusicService extends Service {
 
 
     public class MyBinder extends Binder {
-        public MusicService getService() {
-            return MusicService.this;
+        public MusicService1 getService() {
+            return MusicService1.this;
         }
     }
 
-    public Notification showNotification() {
-
+    public Notification showNotification(boolean isUpdate) {
+        bigViews = new RemoteViews(getPackageName(), R.layout.notification_view_expanded);
+        views = new RemoteViews(getPackageName(), R.layout.notification_view);
         Intent intent = new Intent(getApplicationContext(), PlayingActivity.class);
         intent.putExtra(PlayingActivity.BACK, true);
-
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        bigViews = new RemoteViews(getPackageName(), R.layout.notification_view_expanded);
-        views = new RemoteViews(getPackageName(), R.layout.notification_view);
+        if (isPlaying()) {
+            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
+            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
+        } else {
+            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
+            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
+        }
 
-        if (arrSong != null && arrSong.size() > 0) {
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentPrev = new Intent(Constants.ACTION_PREV);
+        intentPrev.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntentPrev = PendingIntent.getBroadcast(getApplicationContext(), 0, intentPrev, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentPlayPause = new Intent(Constants.ACTION_PLAY_PAUSE);
+        intentPlayPause.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntentPlayPause = PendingIntent.getBroadcast(getApplicationContext(), 0, intentPlayPause, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentNext = new Intent(Constants.ACTION_NEXT);
+        intentNext.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntentNext = PendingIntent.getBroadcast(getApplicationContext(), 0, intentNext, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentStopSelf = new Intent(this, MusicService1.class);
+        intentStopSelf.setAction(MusicService1.ACTION_STOP_SERVICE);
+        PendingIntent pendingIntentStopSelf = PendingIntent.getService(this, 0, intentStopSelf, PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext());
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setContentIntent(pendingIntent);
+        builder.setContent(views);
+        builder.setCustomBigContentView(bigViews);
+
+        if (arrSong != null && arrSong.size() >0) {
             bigViews.setTextViewText(R.id.tv_song_title_noti, arrSong.get(mPosition).getTitle());
             bigViews.setTextViewText(R.id.tv_artist_noti, arrSong.get(mPosition).getArtist());
 
@@ -325,31 +349,7 @@ public class MusicService extends Service {
             }
         }
 
-        if (isPlaying()) {
-            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
-            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_pause_new);
-        } else {
-            views.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
-            bigViews.setImageViewResource(R.id.btn_play_pause_noti, R.drawable.ic_play_new);
-        }
-
-
-        Intent intentPrev = new Intent(this, PrevMusicReceiver.class);
-        intentPrev.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendingIntentPrev = PendingIntent.getBroadcast(getApplicationContext(), 0, intentPrev, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Intent intentPlayPause = new Intent(this, PlayPauseMusicReceiver.class);
-        intentPlayPause.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendingIntentPlayPause = PendingIntent.getBroadcast(getApplicationContext(), 0, intentPlayPause, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Intent intentNext = new Intent(this, NextMusicReceiver.class);
-        intentNext.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendingIntentNext = PendingIntent.getBroadcast(this, 0, intentNext, 0);
-
-        Intent intentStopSelf = new Intent(this, MusicService.class);
-        intentStopSelf.setAction(MusicService.ACTION_STOP_SERVICE);
-        PendingIntent pendingIntentStopSelf = PendingIntent.getService(this, 0, intentStopSelf, PendingIntent.FLAG_UPDATE_CURRENT);
-
+        n = builder.build();
         bigViews.setOnClickPendingIntent(R.id.btn_close_noti, pendingIntentStopSelf);
         bigViews.setOnClickPendingIntent(R.id.btn_prev_noti, pendingIntentPrev);
         bigViews.setOnClickPendingIntent(R.id.btn_next_noti, pendingIntentNext);
@@ -359,42 +359,41 @@ public class MusicService extends Service {
         views.setOnClickPendingIntent(R.id.btn_next_noti, pendingIntentNext);
         views.setOnClickPendingIntent(R.id.btn_play_pause_noti, pendingIntentPlayPause);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel notificationChannel = notificationManager.getNotificationChannel(channelId);
             if (notificationChannel == null) {
                 int importance = NotificationManager.IMPORTANCE_HIGH; //Set the importance level
-                notificationChannel = new NotificationChannel(channelId, channelDescription, importance);
-                notificationChannel.setLightColor(Color.GREEN); //Set if it is necesssary
-                notificationChannel.enableVibration(true); //Set if it is necesssary
-                notificationManager.createNotificationChannel(notificationChannel);
-            }
+            notificationChannel = new NotificationChannel(channelId, channelDescription, importance);
+            notificationChannel.setLightColor(Color.GREEN); //Set if it is necesssary
+            notificationChannel.enableVibration(true); //Set if it is necesssary
+            notificationManager.createNotificationChannel(notificationChannel);
         }
-
-
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            n = new Notification.Builder(this, channelId).build();
-        } else {
+            n = new Notification.Builder(this,channelId).build();
+        }else{
             n = new Notification.Builder(this).build();
         }
-        n.bigContentView = bigViews;
-        n.contentView = views;
-        n.flags = Notification.FLAG_ONGOING_EVENT;
-        n.icon = R.drawable.ic_notification;
-        n.contentIntent = pendingIntent;
 
-        startForeground(NOTIFICATION_ID, n);
-        statusForeground = true;
+
+
+
+        if (isUpdate) {
+            startForeground(NOTIFICATION_ID, n);
+            statusForeground = true;
+        }
+
         return n;
     }
 
+
+
+
     public boolean isPlaying() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.isPlaying();
-        }
-        return false;
+        return mediaPlayer.isPlaying();
     }
 
     public void setPosition(int position) {
@@ -406,17 +405,11 @@ public class MusicService extends Service {
     }
 
     public int getCurrentMedia() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getCurrentPosition();
-        }
-        return -1;
+        return mediaPlayer.getCurrentPosition();
     }
 
     public int getDurationMedia() {
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            return mediaPlayer.getDuration();
-        }
-        return 0;
+        return mediaPlayer.getDuration();
     }
 
     public void seekTo(int seconds) {

@@ -51,7 +51,6 @@ public class FragmentAlbum extends Fragment implements AlbumOnCallBack {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_album, container, false);
         initViews();
-        //  showAlbumList();
         return view;
     }
 
@@ -130,19 +129,16 @@ public class FragmentAlbum extends Fragment implements AlbumOnCallBack {
                 }
                 return false;
             }
-
         });
         MenuItemCompat.setOnActionExpandListener(item, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
-
                 albumGridAdapter.setFilter(lstAlbum);
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
-
                 showAlbumList();
                 return true;
             }
@@ -166,18 +162,20 @@ public class FragmentAlbum extends Fragment implements AlbumOnCallBack {
 
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
-
         Intent intent = new Intent(getActivity(), AlbumListActivity.class);
         mService = (MusicService) DataCenter.instance.musicService;
-        mService.setIDAlbum(lstAlbum.get(position).getId());
-        getActivity().startActivity(intent);
+        if (mService != null) {
+            mService.setIDAlbum(lstAlbum.get(position).getId());
+            getActivity().startActivity(intent);
+        }
     }
 
     private void showAlbumList() {
-
         lstAlbum = DataCenter.instance.getListAlbum();
-        albumGridAdapter = new FragmentAlbumAdapter(getActivity(), lstAlbum, this);
-        rvAlbumList.setAdapter(albumGridAdapter);
+        if (lstAlbum.size() > 0 && lstAlbum != null) {
+            albumGridAdapter = new FragmentAlbumAdapter(getActivity(), lstAlbum, this);
+            rvAlbumList.setAdapter(albumGridAdapter);
+        }
     }
 
     public void setLstAlbum(ArrayList<Album> lstAlbum) {

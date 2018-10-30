@@ -16,9 +16,9 @@ public class NextMusicReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         MusicService musicService = (MusicService) DataCenter.instance.musicService;
-
-        musicService.nextMusic();
-
-        musicService.showNotification(true);
+        if (musicService != null) {
+            musicService.nextMusic();
+            musicService.showNotification();
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.example.tomato.oceanmusic.activities;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -12,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -78,7 +81,7 @@ public class AlbumListActivity extends AppCompatActivity implements SongOnCallBa
     }
 
     private void showCover() {
-        if (listSong != null) {
+        if (listSong != null && listSong.size() > 0) {
             String path = listSong.get(0).getAlbumImagePath();
             if (path != null) {
                 File file = new File(path);
@@ -91,10 +94,12 @@ public class AlbumListActivity extends AppCompatActivity implements SongOnCallBa
 
     private void getAndShowSongList() {
         mService = (MusicService) DataCenter.instance.musicService;
-        int idAlbum = mService.getIDAlbum();
-        listSong = DataCenter.instance.getListSongOfAlbum(idAlbum);
-        adapter = new SongListAdapter(this, listSong, this);
-        rvSongList.setAdapter(adapter);
+        if (mService != null) {
+            int idAlbum = mService.getIDAlbum();
+            listSong = DataCenter.instance.getListSongOfAlbum(idAlbum);
+            adapter = new SongListAdapter(this, listSong, this);
+            rvSongList.setAdapter(adapter);
+        }
     }
 
     @Override
@@ -110,16 +115,39 @@ public class AlbumListActivity extends AppCompatActivity implements SongOnCallBa
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
         mService = (MusicService) DataCenter.instance.musicService;
-        mService.setmType(DATA_TYPE_SONG_OF_ALBUM);
-        mService.updateData(DATA_TYPE_SONG_OF_ALBUM);
-        mService.setStatusRepeat(false);
-        if (statusSearch) {
-            String id = listSong.get(position).getId();
-            mService.getPositionToSearch(id);
+        if (mService != null) {
+            mService.setmType(DATA_TYPE_SONG_OF_ALBUM);
+            mService.updateData(DATA_TYPE_SONG_OF_ALBUM);
+            mService.setStatusRepeat(false);
+            if (statusSearch) {
+                String id = listSong.get(position).getId();
+                mService.getPositionToSearch(id);
+                updateSearchActivity(false);
+                getAndShowSongList();
+                initToolbar();
 
-        } else {
-            mService.playMusic(position);
+            } else {
+                mService.playMusic(position);
+            }
         }
+    }
+
+    @SuppressLint("RestrictedApi")
+    public void updateSearchActivity(boolean status) {
+        if (status) {
+            ivAlbumCover.setVisibility(View.GONE);
+        } else {
+            ivAlbumCover.setVisibility(View.VISIBLE);
+            hideSoftKeyboard(this);
+        }
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {        // hide keyboad when search
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
     }
 
     private ArrayList<Song> filter(ArrayList<Song> lstSong, String query) {
@@ -179,6 +207,7 @@ public class AlbumListActivity extends AppCompatActivity implements SongOnCallBa
             public boolean onMenuItemActionExpand(MenuItem item) {
                 statusSearch = true;
                 adapter.setFilter(listSong);
+                updateSearchActivity(true);
                 return true;
             }
 
@@ -186,6 +215,7 @@ public class AlbumListActivity extends AppCompatActivity implements SongOnCallBa
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 statusSearch = false;
                 getAndShowSongList();
+                updateSearchActivity(false);
                 return true;
             }
         });

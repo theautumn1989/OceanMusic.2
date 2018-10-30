@@ -20,7 +20,7 @@
             android:layout_width="@dimen/dimen_80dp"
             android:layout_height="@dimen/dimen_80dp"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_album_new" />
+            android:src="@drawable/ic_fragment_song" />
 
         <LinearLayout
             android:layout_width="match_parent"

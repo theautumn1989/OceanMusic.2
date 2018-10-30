@@ -25,6 +25,7 @@ import android.widget.ImageView;
 
 
 import com.example.tomato.oceanmusic.R;
+import com.example.tomato.oceanmusic.activities.MainActivity;
 import com.example.tomato.oceanmusic.adapter.SongListAdapter;
 import com.example.tomato.oceanmusic.interfaces.SongOnCallBack;
 import com.example.tomato.oceanmusic.models.Song;
@@ -56,7 +57,6 @@ public class FragmentSongList extends Fragment implements SongOnCallBack {
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_song_list, container, false);
         initViews();
-        //showListSong();
         return view;
     }
 
@@ -82,9 +82,10 @@ public class FragmentSongList extends Fragment implements SongOnCallBack {
 
     private void showListSong() {
         listSong = DataCenter.instance.getListSong();
-
-        songAdapter = new SongListAdapter(getActivity(), listSong, this);
-        rvListSong.setAdapter(songAdapter);
+        if (listSong != null && listSong.size() > 0) {
+            songAdapter = new SongListAdapter(getActivity(), listSong, this);
+            rvListSong.setAdapter(songAdapter);
+        }
     }
 
     @Override
@@ -104,7 +105,6 @@ public class FragmentSongList extends Fragment implements SongOnCallBack {
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public void onCreateOptionsMenu(final Menu menu, MenuInflater inflater) {
@@ -178,15 +178,23 @@ public class FragmentSongList extends Fragment implements SongOnCallBack {
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
         MusicService mService = (MusicService) DataCenter.instance.musicService;
-        mService.setStatusRepeat(false);
-        mService.setmType(DATA_TYPE_SONG_ALL);
-        mService.updateData(DATA_TYPE_SONG_ALL);
-        if (statusSearch) {
-            String id = listSong.get(position).getId();
-            mService.getPositionToSearch(id);
+        if (mService != null) {
+            mService.setStatusRepeat(false);
+            mService.setmType(DATA_TYPE_SONG_ALL);
+            mService.updateData(DATA_TYPE_SONG_ALL);
+            if (statusSearch) {
+                String id = listSong.get(position).getId();
+                mService.getPositionToSearch(id);
 
-        } else {
-            mService.playMusic(position);
+                MainActivity main = (MainActivity) DataCenter.instance.mainActivity;
+                if (main != null) {
+                    main.initToolbar();
+                    showListSong();
+                }
+
+            } else {
+                mService.playMusic(position);
+            }
         }
     }
 

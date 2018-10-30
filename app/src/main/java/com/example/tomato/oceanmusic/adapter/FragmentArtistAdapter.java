@@ -47,11 +47,11 @@ public class FragmentArtistAdapter extends RecyclerView.Adapter<FragmentArtistAd
 
     @Override
     public void onBindViewHolder(ViewHolderArtist holder, int position) {
-        Artist artist = mData.get(position);
-        holder.tvArtist.setText(mData.get(position).getName());
-        holder.setId(position);
-
-        Picasso.with(mContext).load(artist.getArt()).placeholder(R.drawable.ic_artist_3).into(holder.ivArt);
+        if (mData != null && mData.size() > 0) {
+            holder.tvArtist.setText(mData.get(position).getName());
+            holder.tvNumberSong.setText(mData.get(position).getNumberAlbum() + " album | " + mData.get(position).getNumberSong() + " song");
+            holder.setId(position);
+        }
     }
 
     public void filter(ArrayList<Artist> lstArtist) {
@@ -68,7 +68,7 @@ public class FragmentArtistAdapter extends RecyclerView.Adapter<FragmentArtistAd
     public class ViewHolderArtist extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView tvArtist;
         int id;
-        CircleImageView ivArt;
+        TextView tvNumberSong;
 
         public int getId() {
             return id;
@@ -81,7 +81,7 @@ public class FragmentArtistAdapter extends RecyclerView.Adapter<FragmentArtistAd
         public ViewHolderArtist(View itemView) {
             super(itemView);
             tvArtist = itemView.findViewById(R.id.artist_title_item);
-            ivArt = itemView.findViewById(R.id.iv_artist_item);
+            tvNumberSong = itemView.findViewById(R.id.tv_artist_number_song);
             itemView.setOnClickListener(this);
         }
 

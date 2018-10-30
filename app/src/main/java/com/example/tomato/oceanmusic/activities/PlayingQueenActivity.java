@@ -32,17 +32,17 @@ public class PlayingQueenActivity extends AppCompatActivity implements SongPlayi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_playing_queen);
-        mService = (MusicService) DataCenter.instance.musicService;
-        arrSong = mService.getArrSong();
-        init();
         updateListSong();
-        addItemTouchCallback(recyclerView);
+        init();
 
+        addItemTouchCallback(recyclerView);
     }
 
     private void updateListSong() {
         mService = (MusicService) DataCenter.instance.musicService;
-        arrSong = mService.getArrSong();
+        if (mService != null) {
+            arrSong = mService.getArrSong();
+        }
     }
 
     @Override
@@ -57,7 +57,6 @@ public class PlayingQueenActivity extends AppCompatActivity implements SongPlayi
         adapter = new SongListPlayingAdapter(PlayingQueenActivity.this, arrSong, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         recyclerView.setAdapter(adapter);
-
     }
 
     private void addItemTouchCallback(RecyclerView recyclerView) {
@@ -76,7 +75,6 @@ public class PlayingQueenActivity extends AppCompatActivity implements SongPlayi
         });
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
-
     }
 
     public void onMoveSong(int fromPosition, int toPosition) {
@@ -99,9 +97,10 @@ public class PlayingQueenActivity extends AppCompatActivity implements SongPlayi
 
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
-
         mService = (MusicService) DataCenter.instance.musicService;
-        mService.setPosition(position);
-        mService.playMusic(position);
+        if (mService != null) {
+            mService.setPosition(position);
+            mService.playMusic(position);
+        }
     }
 }

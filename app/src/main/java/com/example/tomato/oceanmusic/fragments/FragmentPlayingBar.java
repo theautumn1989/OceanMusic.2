@@ -25,13 +25,12 @@ import android.widget.TextView;
 
 
 import com.example.tomato.oceanmusic.R;
-import com.example.tomato.oceanmusic.activities.PlayMusicActivity;
+import com.example.tomato.oceanmusic.activities.PlayingActivity;
 import com.example.tomato.oceanmusic.models.Song;
 import com.example.tomato.oceanmusic.services.MusicService;
 import com.example.tomato.oceanmusic.utils.Constants;
 import com.example.tomato.oceanmusic.utils.DataCenter;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -57,15 +56,6 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
             updatePlayPauseButton();
         }
     };
-
-    private void registerBroadcastUpdatePlaying() {
-        IntentFilter intentFilter = new IntentFilter(Constants.ACTION_COMPLETE_SONG);
-        getActivity().registerReceiver(broadcastReceiverUpdatePlaying, intentFilter);
-    }
-
-    private void unRegisterBroadcastUpdatePlaying() {
-        getActivity().unregisterReceiver(broadcastReceiverUpdatePlaying);
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -128,6 +118,15 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
         });
     }
 
+    private void registerBroadcastUpdatePlaying() {
+        IntentFilter intentFilter = new IntentFilter(Constants.ACTION_COMPLETE_SONG);
+        getActivity().registerReceiver(broadcastReceiverUpdatePlaying, intentFilter);
+    }
+
+    private void unRegisterBroadcastUpdatePlaying() {
+        getActivity().unregisterReceiver(broadcastReceiverUpdatePlaying);
+    }
+
     public void updatePlayPauseButton() {
         if (mService != null) {
             if (mService.isPlaying()) {
@@ -139,20 +138,23 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
     }
 
     private void setTimeTotal() {
-        sbSong.setMax(mService.getDurationMedia());
+        if (mService != null ) {
+            sbSong.setMax(mService.getDurationMedia());
+        }
     }
-
 
     private void updateTimeSong() {
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if(getActivity()==null || getActivity().isFinishing()) {
+                if (getActivity() == null || getActivity().isFinishing()) {
                     return;
                 }
-                sbSong.setProgress(mService.getCurrentMedia());
-                mService.nextAutoPlayMusic();
+                if (mService != null) {
+                    sbSong.setProgress(mService.getCurrentMedia());
+                    mService.nextAutoPlayMusic();
+                }
                 handler.postDelayed(this, 500);
             }
         }, 100);
@@ -160,20 +162,21 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
 
     public void updatePlayingBar(int position) {
         arrSong = mService.getArrSong();
-
         Bitmap bitmap;
         String albumPath;
 
-        albumPath = arrSong.get(position).getAlbumImagePath();
-        if (albumPath != null && albumPath != "") {
-            bitmap = BitmapFactory.decodeFile(albumPath);
+        if (arrSong != null && arrSong.size() > 0) {
+            albumPath = arrSong.get(position).getAlbumImagePath();
+            if (albumPath != null && albumPath != "") {
+                bitmap = BitmapFactory.decodeFile(albumPath);
 
-        } else {
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_avatar_bar);
+            } else {
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_avatar_bar);
+            }
+            ciSong.setImageBitmap(bitmap);
+            tvSongTitle.setText(arrSong.get(position).getTitle());
+            tvSongArtist.setText(arrSong.get(position).getArtist());
         }
-        ciSong.setImageBitmap(bitmap);
-        tvSongTitle.setText(arrSong.get(position).getTitle());
-        tvSongArtist.setText(arrSong.get(position).getArtist());
 
         updateTimeSong();
         setTimeTotal();
@@ -184,7 +187,7 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.ll_playing_bar:
-                Intent intent = new Intent(getActivity(), PlayMusicActivity.class);
+                Intent intent = new Intent(getActivity(), PlayingActivity.class);
                 startActivity(intent);
                 break;
             case R.id.iv_play_pause:
@@ -195,7 +198,7 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
                 }
                 break;
             case R.id.iv_song:
-                Intent intent1 = new Intent(getActivity(), PlayMusicActivity.class);
+                Intent intent1 = new Intent(getActivity(), PlayingActivity.class);
                 startActivity(intent1);
                 break;
         }

@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_album_new" />
+            android:src="@drawable/ic_fragment_song" />
     </LinearLayout>
 
     <LinearLayout

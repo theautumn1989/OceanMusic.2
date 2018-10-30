@@ -5,10 +5,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+
 import com.example.tomato.oceanmusic.R;
 import com.example.tomato.oceanmusic.interfaces.AlbumOnCallBack;
 import com.example.tomato.oceanmusic.models.Album;
@@ -39,7 +39,7 @@ public class FragmentAlbumAdapter extends RecyclerView.Adapter<FragmentAlbumAdap
 
     @Override
     public ViewHolderAlbumGrid onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mLayoutInflater.inflate(R.layout.item_album_grid, null);
+        View view = mLayoutInflater.inflate(R.layout.item_album, null);
 
         ViewHolderAlbumGrid holder = new ViewHolderAlbumGrid(view);
         return holder;
@@ -47,17 +47,19 @@ public class FragmentAlbumAdapter extends RecyclerView.Adapter<FragmentAlbumAdap
 
     @Override
     public void onBindViewHolder(ViewHolderAlbumGrid holder, int position) {
-        Album item = mData.get(position);
-        String path = mData.get(position).getAlbumArtPath();
-        if (path != null) {
-            Glide.with(mContext).load(path).into(holder.ivImgAlbum);
+        if (mData != null && mData.size() > 0) {
+            Album item = mData.get(position);
+            String path = mData.get(position).getAlbumArtPath();
+            if (path != null) {
+                Glide.with(mContext).load(path).into(holder.ivImgAlbum);
 
-        } else {
-            holder.ivImgAlbum.setImageResource(R.drawable.ic_album_4);
+            } else {
+                holder.ivImgAlbum.setImageResource(R.drawable.ic_album_4);
+            }
+            holder.tvAlbumTitle.setText(item.getTitle());
+            holder.tvArtist.setText(item.getArtist());
+            holder.setId(position);
         }
-        holder.tvAlbumTitle.setText(item.getTitle());
-        holder.tvArtist.setText(item.getArtist());
-        holder.setId(position);
     }
 
     public void setFilter(ArrayList<Album> lstFiltered) {

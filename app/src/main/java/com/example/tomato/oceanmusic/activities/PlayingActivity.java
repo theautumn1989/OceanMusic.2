@@ -1,14 +1,15 @@
 package com.example.tomato.oceanmusic.activities;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -23,6 +24,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -41,7 +43,7 @@ import com.example.tomato.oceanmusic.utils.DataCenter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
-public class PlayMusicActivity extends AppCompatActivity
+public class PlayingActivity extends AppCompatActivity
         implements View.OnClickListener, SongPlayingOnCallBack {
 
     public static final String BACK = "back";
@@ -52,12 +54,12 @@ public class PlayMusicActivity extends AppCompatActivity
     LinearLayoutManager layoutManager;
     ArrayList<Song> arrSong;
     SongListPlayingAdapter songAdapter;
-
-    CoordinatorLayout coordinatorLayout;
+    Toolbar toolbar;
     CircularSeekBar circularSeekBar;
     MusicService mService;
-
+    ImageView ivBackgound;
     RelativeLayout rlMediaControls;
+
     TextView tvTimeCenter, mTvSongName, mTvArtist;
     int mPosition = 0;
     boolean isSeeking;
@@ -73,16 +75,6 @@ public class PlayMusicActivity extends AppCompatActivity
         }
     };
 
-    private void registerBroadcastSongComplete() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.ACTION_COMPLETE_SONG);
-        registerReceiver(broadcastReceiverSongCompleted, intentFilter);
-    }
-
-    private void unRegisterBroadcastSongComplete() {
-        unregisterReceiver(broadcastReceiverSongCompleted);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,14 +87,14 @@ public class PlayMusicActivity extends AppCompatActivity
         init();
         initEvent();
 
-        showListSong();
-        updateToolbar(mPosition);
-        updatePlayPauseButton();
-        updateTimeSong();
+        if (mService != null && mService.isPlaying()) {
+            updateToolbar(mPosition);
+            updatePlayPauseButton();
+            updateTimeSong();
+        }
+
         registerBroadcastSongComplete();
         updateStatusRepeatShuffle();
-        setAlbumArt();
-
     }
 
     @Override
@@ -110,7 +102,6 @@ public class PlayMusicActivity extends AppCompatActivity
         super.onStart();
         arrSong = mService.getArrSong();
         showListSong();
-        setAlbumArt();
     }
 
     public void updateStatusRepeatShuffle() {
@@ -128,7 +119,7 @@ public class PlayMusicActivity extends AppCompatActivity
     }
 
     public void initToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar_playing);
+        toolbar = findViewById(R.id.toolbar_playing);
         setSupportActionBar(toolbar);
         toolbar.setOverflowIcon(ContextCompat.getDrawable(this, R.drawable.abc_ic_menu_moreoverflow_mtrl_alpha));
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back);
@@ -137,14 +128,26 @@ public class PlayMusicActivity extends AppCompatActivity
     }
 
     private void init() {
-        arrSong = new ArrayList<>();
         mService = (MusicService) DataCenter.instance.musicService;
         mPosition = mService.getPosition();
         arrSong = mService.getArrSong();
     }
 
+    private void registerBroadcastSongComplete() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.ACTION_COMPLETE_SONG);
+        registerReceiver(broadcastReceiverSongCompleted, intentFilter);
+    }
+
+    private void unRegisterBroadcastSongComplete() {
+        unregisterReceiver(broadcastReceiverSongCompleted);
+    }
+
     private void showListSong() {
-        songAdapter = new SongListPlayingAdapter(this, arrSong, this);
+        arrSong = mService.getArrSong();
+        if (arrSong != null && arrSong.size() > 0) {
+            songAdapter = new SongListPlayingAdapter(this, arrSong, this);
+        }
         rvListSongPlaying.setAdapter(songAdapter);
         rvListSongPlaying.setHasFixedSize(true);
     }
@@ -176,8 +179,6 @@ public class PlayMusicActivity extends AppCompatActivity
         float_play_pause = findViewById(R.id.fab_play_pause);
         mTvSongName = findViewById(R.id.tv_song_name_play);
         mTvArtist = findViewById(R.id.tv_artist_play);
-
-        coordinatorLayout = findViewById(R.id.coordinator_playing);
         circularSeekBar = findViewById(R.id.circularSb);
 
         ivpre = findViewById(R.id.iv_prev);
@@ -185,6 +186,7 @@ public class PlayMusicActivity extends AppCompatActivity
         ivShuffle = findViewById(R.id.iv_shuffle);
         ivRepeat = findViewById(R.id.iv_repeat);
 
+        ivBackgound = findViewById(R.id.image);
         rlMediaControls = findViewById(R.id.rl_media_controls);
         tvTimeCenter = findViewById(R.id.tv_time_center);
         isSeeking = false;
@@ -200,25 +202,12 @@ public class PlayMusicActivity extends AppCompatActivity
         rvListSongPlaying.addItemDecoration(dividerItemDecoration);
     }
 
-    private void setAlbumArt() {
-        if (mPosition > -1) {
-            Bitmap bitmap;
-            String albumPath;
-            albumPath = arrSong.get(mPosition).getAlbumImagePath();
-            if (albumPath != null && albumPath != "") {
-                bitmap = BitmapFactory.decodeFile(albumPath);
-            } else {
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_player_bg);
-            }
-            BitmapDrawable bitmapDrawable = new BitmapDrawable(getResources(), bitmap);
-            coordinatorLayout.setBackground(bitmapDrawable);
-        }
-    }
-
     private void updateToolbar(int position) {
         if (position > -1) {
-            mTvSongName.setText(arrSong.get(position).getTitle());
-            mTvArtist.setText(arrSong.get(position).getArtist());
+            if (arrSong.size() > 0 && arrSong != null) {
+                mTvSongName.setText(arrSong.get(position).getTitle());
+                mTvArtist.setText(arrSong.get(position).getArtist());
+            }
         }
     }
 
@@ -233,21 +222,23 @@ public class PlayMusicActivity extends AppCompatActivity
     }
 
     private void updateTimeSong() {
-        circularSeekBar.setMax(mService.getDurationMedia());
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                SimpleDateFormat dinhDangGio = new SimpleDateFormat("mm:ss");
-                tvTimeCenter.setText(dinhDangGio.format(mService.getCurrentMedia()));
+        if (mService != null) {
+            circularSeekBar.setMax(mService.getDurationMedia());
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    SimpleDateFormat dinhDangGio = new SimpleDateFormat("mm:ss");
+                    tvTimeCenter.setText(dinhDangGio.format(mService.getCurrentMedia()));
+                    circularSeekBar.setProgress(mService.getCurrentMedia());
 
-                circularSeekBar.setProgress(mService.getCurrentMedia());
+                    mService.nextAutoPlayMusic();
 
-                mService.nextAutoPlayMusic();
+                    handler.postDelayed(this, 500);
+                }
+            }, 100);
+        }
 
-                handler.postDelayed(this, 500);
-            }
-        }, 100);
     }
 
     @Override
@@ -260,12 +251,14 @@ public class PlayMusicActivity extends AppCompatActivity
                 }
                 break;
             case R.id.iv_next:
-                mService.nextMusic();
-                setAlbumArt();
+                if (mService != null && mService.getStatusForegound()) {
+                    mService.nextMusic();
+                }
                 break;
             case R.id.iv_prev:
-                mService.backMusic();
-                setAlbumArt();
+                if (mService != null && mService.getStatusForegound()) {
+                    mService.backMusic();
+                }
                 break;
             case R.id.iv_repeat:
                 if (mService.isRepeat()) {
@@ -289,20 +282,28 @@ public class PlayMusicActivity extends AppCompatActivity
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onItemClicked(int position, boolean isLongClick) {
 
+        mPosition = position;
         mService.setStatusRepeat(false);
         updatePlayPauseButton();
         updateToolbar(position);
-        setAlbumArt();
         if (statusSearch) {
-            String id = arrSong.get(position).getId();
-            mService.getPositionToSearch(id);
+            if (arrSong != null && arrSong.size() > 0) {
+                String id = arrSong.get(position).getId();
+                mService.getPositionToSearch(id);
+                updateSearchActivity(false);
+                showListSong();
 
+                initToolbar();
+                updateToolbar(position);
+            }
         } else {
             mService.playMusic(position);
         }
+
     }
 
     @Override
@@ -311,7 +312,7 @@ public class PlayMusicActivity extends AppCompatActivity
         unRegisterBroadcastSongComplete();
 
         mService = (MusicService) DataCenter.instance.musicService;
-        if (mService.getStatusForegound()) {
+        if (mService != null && mService.getStatusForegound()) {
             DataCenter.instance.playActivity = null;
         } else {
             mService.stopSelf();
@@ -337,7 +338,7 @@ public class PlayMusicActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_playing, menu);
         MenuItem item = menu.findItem(R.id.ic_search_playing);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
 
         final EditText searchPlate = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
         searchPlate.setHint(R.string.search_toolbar);
@@ -346,7 +347,6 @@ public class PlayMusicActivity extends AppCompatActivity
 
         ImageView ivClose = searchView.findViewById(android.support.v7.appcompat.R.id.search_close_btn);
         ivClose.setColorFilter(ContextCompat.getColor(this, R.color.white));
-
 
         ivClose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -371,23 +371,52 @@ public class PlayMusicActivity extends AppCompatActivity
                 return false;
             }
         });
+
         MenuItemCompat.setOnActionExpandListener(item, new MenuItemCompat.OnActionExpandListener() {
+
             @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
+            public boolean onMenuItemActionExpand(MenuItem item) {      // click search
                 statusSearch = true;
                 songAdapter.setFilter(arrSong);
+                updateSearchActivity(statusSearch);
                 return true;
             }
 
             @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
+            public boolean onMenuItemActionCollapse(MenuItem item) {       // dont click
                 statusSearch = false;
+                updateSearchActivity(false);
                 showListSong();
                 return true;
             }
         });
         return true;
     }
+
+    @SuppressLint("RestrictedApi")
+    public void updateSearchActivity(boolean status) {
+        if (status) {
+            ivBackgound.setVisibility(View.GONE);
+            rlMediaControls.setVisibility(View.GONE);
+            float_play_pause.setVisibility(View.GONE);
+        } else {
+            ivBackgound.setVisibility(View.VISIBLE);
+            rlMediaControls.setVisibility(View.VISIBLE);
+            float_play_pause.setVisibility(View.VISIBLE);
+            updatePlayPauseButton();
+            hideSoftKeyboard(this);
+        }
+
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

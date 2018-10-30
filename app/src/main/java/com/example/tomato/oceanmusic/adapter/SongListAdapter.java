@@ -41,9 +41,11 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(ViewHolderSong holder, int position) {
-        holder.tvTitle.setText(mData.get(position).getTitle());
-        holder.tvArtist.setText(mData.get(position).getArtist());
-        holder.setId(position);
+        if(mData != null && mData.size() > 0){
+            holder.tvTitle.setText(mData.get(position).getTitle());
+            holder.tvArtist.setText(mData.get(position).getArtist());
+            holder.setId(position);
+        }
     }
 
     @Override

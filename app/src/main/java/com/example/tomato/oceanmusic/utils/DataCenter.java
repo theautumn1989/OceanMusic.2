@@ -41,14 +41,6 @@ public class DataCenter extends Application {
         instance = this;
     }
 
-    public static void setStatusBarTranslucent(boolean makeTranslucent, Activity activity) {
-        if (makeTranslucent) {
-            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        } else {
-            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        }
-    }
-
     public ArrayList<Song> getListSong() {
         ArrayList<Song> lstSong = new ArrayList<>();
 
@@ -98,22 +90,25 @@ public class DataCenter extends Application {
         return lstAlbum;
     }
 
-
     public ArrayList<Artist> getListArtist() {
         ArrayList<Artist> lstArtist = new ArrayList<>();
-        Uri art = Uri.parse("content://media/external/audio/albumart");
 
-        Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[]{MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ARTIST_ID, MediaStore.Audio.Media.ALBUM_ID},
-                null, null, MediaStore.Audio.Media.ARTIST + " ASC");
+        Cursor cursor = getContentResolver().query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Audio.Artists.ARTIST,
+                        MediaStore.Audio.Artists._ID,
+                        MediaStore.Audio.Artists.NUMBER_OF_TRACKS,
+                        MediaStore.Audio.Artists.NUMBER_OF_ALBUMS},
+                null, null, MediaStore.Audio.Artists.ARTIST + " ASC");
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID));
-                int albumID = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-                String thisArt = ContentUris.withAppendedId(art, albumID).toString();
-                Artist item = new Artist(id, title, thisArt);
+                String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Artists.ARTIST));
+                int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Artists._ID));
+
+                String numberSong = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_TRACKS));
+                String numberAlbum = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_ALBUMS));
+
+                Artist item = new Artist(id, title, numberAlbum, numberSong);
                 lstArtist.add(item);
             } while (cursor.moveToNext());
         }

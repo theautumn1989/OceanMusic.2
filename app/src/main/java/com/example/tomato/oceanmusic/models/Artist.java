@@ -12,30 +12,23 @@ import java.util.ArrayList;
 public class Artist implements Parcelable {
     private int id;
     private String name;
-    private String art;
     private ArrayList<Song> lstSong;
+    private String numberAlbum;
+    private String numberSong;
 
-    public Artist(int id, String name, String art) {
+    public Artist(int id, String name, String numberAlbum, String numberSong) {
         this.id = id;
         this.name = name;
-        this.art = art;
+        this.numberAlbum = numberAlbum;
+        this.numberSong = numberSong;
     }
 
-    public Artist(int id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    public Artist(int id, String name, ArrayList<Song> lstSong) {
-        this.id = id;
-        this.name = name;
-        this.lstSong = lstSong;
-    }
 
     protected Artist(Parcel in) {
         id = in.readInt();
         name = in.readString();
-        art = in.readString();
+        numberAlbum = in.readString();
+        numberSong = in.readString();
     }
 
     public static final Creator<Artist> CREATOR = new Creator<Artist>() {
@@ -70,15 +63,21 @@ public class Artist implements Parcelable {
         return lstSong;
     }
 
-    public void setLstSong(ArrayList<Song> lstSong) {
-        this.lstSong = lstSong;
-    }
-    public String getArt() {
-        return art;
+
+    public String getNumberAlbum() {
+        return numberAlbum;
     }
 
-    public void setArt(String art) {
-        this.art = art;
+    public void setNumberAlbum(String numberAlbum) {
+        this.numberAlbum = numberAlbum;
+    }
+
+    public String getNumberSong() {
+        return numberSong;
+    }
+
+    public void setNumberSong(String numberSong) {
+        this.numberSong = numberSong;
     }
 
     @Override
@@ -90,10 +89,10 @@ public class Artist implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeInt(id);
         parcel.writeString(name);
-        parcel.writeString(art);
+        parcel.writeString(numberAlbum);
+        parcel.writeString(numberSong);
     }
 
-    // khi load phần artist sẽ có nhiều ca sĩ trùng nhau 2 hàm này sẽ giải  quyết vấn đề đó
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

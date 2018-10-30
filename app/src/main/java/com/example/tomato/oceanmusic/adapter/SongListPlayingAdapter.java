@@ -53,16 +53,18 @@ public class SongListPlayingAdapter extends RecyclerView.Adapter<SongListPlaying
 
     @Override
     public void onBindViewHolder(ViewHolderSongPlaying holder, int position) {
-        Song item = mData.get(position);
-        holder.setId(position);
-        String path = mData.get(position).getAlbumImagePath();
-        if (path != null) {
-            Glide.with(mContext).load(path).into(holder.imgAlbum);
-        } else {
-            holder.imgAlbum.setImageResource(R.drawable.ic_album_new);
+        if (mData != null && mData.size() > 0) {
+            Song item = mData.get(position);
+            holder.setId(position);
+            String path = mData.get(position).getAlbumImagePath();
+            if (path != null) {
+                Glide.with(mContext).load(path).into(holder.imgAlbum);
+            } else {
+                holder.imgAlbum.setImageResource(R.drawable.ic_album_new);
+            }
+            holder.tvTitle.setText(item.getTitle());
+            holder.tvArtist.setText(item.getArtist());
         }
-        holder.tvTitle.setText(item.getTitle());
-        holder.tvArtist.setText(item.getArtist());
     }
 
     @Override
