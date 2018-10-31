@@ -58,7 +58,7 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
     public void initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar_artist);
         setSupportActionBar(toolbar);
-        toolbar.setOverflowIcon(ContextCompat.getDrawable(this, R.drawable.abc_ic_menu_moreoverflow_mtrl_alpha));
+       // toolbar.setOverflowIcon(ContextCompat.getDrawable(this, R.drawable.abc_ic_menu_moreoverflow_mtrl_alpha));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -167,7 +167,7 @@ public class ArtistListActivity extends AppCompatActivity implements SongOnCallB
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_playing, menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem item = menu.findItem(R.id.ic_search_playing);
         SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
 

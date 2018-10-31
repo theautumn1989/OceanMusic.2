@@ -112,8 +112,14 @@ public class MainActivity extends AppCompatActivity {
                     initView();
                     init();
                 } else {
-                    //   Toast.makeText(this, "người dùng không cấp quyền cho ứng dụng", Toast.LENGTH_LONG).show();
+                    //   Toast.makeText(getApplicationContext(), "người dùng không cấp quyền cho ứng dụng", Toast.LENGTH_LONG).show();
                     Toast.makeText(this, R.string.notification_permissions, Toast.LENGTH_LONG).show();
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                     android.os.Process.killProcess(android.os.Process.myPid());
                 }
                 return;

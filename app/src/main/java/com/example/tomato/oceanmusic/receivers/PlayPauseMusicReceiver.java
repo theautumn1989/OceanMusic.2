@@ -31,5 +31,6 @@ public class PlayPauseMusicReceiver extends BroadcastReceiver {
         if (fmPlayingBar != null) {
             fmPlayingBar.updatePlayPauseButton();
         }
+
     }
 }

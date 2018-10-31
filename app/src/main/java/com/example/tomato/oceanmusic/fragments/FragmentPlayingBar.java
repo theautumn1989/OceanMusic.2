@@ -37,7 +37,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class FragmentPlayingBar extends Fragment implements View.OnClickListener {
 
-    MusicService mService;
+    public MusicService mService;
     View view;
     LinearLayout llPlayingBar;
     SeekBar sbSong;
@@ -45,17 +45,7 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
     ImageView ivPlayPause;
     CircleImageView ciSong;
     ArrayList<Song> arrSong;
-    int mPosition = -1;
-
-    BroadcastReceiver broadcastReceiverUpdatePlaying = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            mService = (MusicService) DataCenter.instance.musicService;
-            mPosition = mService.getPosition();
-            updatePlayingBar(mPosition);
-            updatePlayPauseButton();
-        }
-    };
+    public int mPosition = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,12 +65,10 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
 
         if (mService != null) {
             mPosition = mService.getPosition();
-            registerBroadcastUpdatePlaying();
             if (mPosition > -1) {
                 updatePlayingBar(mPosition);
             }
         } else {
-            registerBroadcastUpdatePlaying();
         }
         return view;
     }
@@ -118,15 +106,6 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
         });
     }
 
-    private void registerBroadcastUpdatePlaying() {
-        IntentFilter intentFilter = new IntentFilter(Constants.ACTION_COMPLETE_SONG);
-        getActivity().registerReceiver(broadcastReceiverUpdatePlaying, intentFilter);
-    }
-
-    private void unRegisterBroadcastUpdatePlaying() {
-        getActivity().unregisterReceiver(broadcastReceiverUpdatePlaying);
-    }
-
     public void updatePlayPauseButton() {
         if (mService != null) {
             if (mService.isPlaying()) {
@@ -137,13 +116,13 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
         }
     }
 
-    private void setTimeTotal() {
-        if (mService != null ) {
+    public void setTimeTotal() {
+        if (mService != null) {
             sbSong.setMax(mService.getDurationMedia());
         }
     }
 
-    private void updateTimeSong() {
+    public void updateTimeSong() {
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -154,14 +133,19 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
                 if (mService != null) {
                     sbSong.setProgress(mService.getCurrentMedia());
                     mService.nextAutoPlayMusic();
+                    if (mService.isPlaying()) {
+                        handler.postDelayed(this, 500);
+                    }
                 }
-                handler.postDelayed(this, 500);
             }
         }, 100);
     }
 
     public void updatePlayingBar(int position) {
-        arrSong = mService.getArrSong();
+
+        if (mService != null) {
+            arrSong = mService.getArrSong();
+        }
         Bitmap bitmap;
         String albumPath;
 
@@ -205,17 +189,13 @@ public class FragmentPlayingBar extends Fragment implements View.OnClickListener
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        DataCenter.instance.fmPlayingBar = null;
-        unRegisterBroadcastUpdatePlaying();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
-        if (mPosition > -1) {
-            updatePlayingBar(mPosition);
+        if (mService != null) {
+            mPosition = mService.getPosition();
+            if (mPosition > -1) {
+                updatePlayingBar(mPosition);
+            }
         }
     }
 }

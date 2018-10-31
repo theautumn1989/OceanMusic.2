@@ -13,6 +13,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -26,9 +27,11 @@ import com.example.tomato.oceanmusic.models.Song;
 import com.example.tomato.oceanmusic.receivers.NextMusicReceiver;
 import com.example.tomato.oceanmusic.receivers.PlayPauseMusicReceiver;
 import com.example.tomato.oceanmusic.receivers.PrevMusicReceiver;
+import com.example.tomato.oceanmusic.receivers.SongCompletedReceiver;
 import com.example.tomato.oceanmusic.utils.Constants;
 import com.example.tomato.oceanmusic.utils.DataCenter;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -169,11 +172,11 @@ public class MusicService extends Service {
         this.mPosition = position;
         if (arrSong != null && arrSong.size() > 0) {
             mediaPlayer = MediaPlayer.create(this, Uri.parse("file://" + arrSong.get(position).getPath()));
-            mediaPlayer.setLooping(true);
+            // mediaPlayer.setLooping(false);
             mediaPlayer.start();
         }
 
-        Intent intent = new Intent(Constants.ACTION_COMPLETE_SONG);
+        Intent intent = new Intent(getApplicationContext(), SongCompletedReceiver.class);
         sendBroadcast(intent);
 
         showNotification();
@@ -190,12 +193,13 @@ public class MusicService extends Service {
                 public void onCompletion(MediaPlayer mp) {
                     nextMusic();
 
-                    Intent intent = new Intent(Constants.ACTION_COMPLETE_SONG);
+                    Intent intent = new Intent(getApplicationContext(), SongCompletedReceiver.class);
                     sendBroadcast(intent);
                 }
             });
         }
     }
+
 
     public void playPauseMusic() {
         if (mediaPlayer.isPlaying()) {
@@ -257,6 +261,7 @@ public class MusicService extends Service {
         }
     }
 
+
     public void backMusic() {
         if (arrSong != null && arrSong.size() > 0) {
             if (isShuffle) {
@@ -264,11 +269,13 @@ public class MusicService extends Service {
                 int newPosition = r.nextInt(arrSong.size());
                 mPosition = newPosition;
             } else {
-                if (mPosition == 0) {
-                    mPosition = arrSong.size();
-                } else {
-                    mPosition--;
-                }
+                mPosition--;
+            }
+            if (mPosition < 0) {
+                mPosition = arrSong.size() - 1;
+            }
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
             }
             playMusic(mPosition);
             setPosition(mPosition);

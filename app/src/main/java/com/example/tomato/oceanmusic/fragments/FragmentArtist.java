@@ -36,6 +36,7 @@ public class FragmentArtist extends Fragment implements ArtistOnCallBack {
     public static final int COLUMS_RECYCLER = 2;
     View view;
     RecyclerView rvListArtist;
+
     ArrayList<Artist> listArtist;
     FragmentArtistAdapter artistAdapter;
     MusicService mService;
@@ -141,6 +142,7 @@ public class FragmentArtist extends Fragment implements ArtistOnCallBack {
                 filteredArtistList.add(artist);
             }
         }
+        setListArtist(filteredArtistList);
         return filteredArtistList;
     }
 
@@ -167,5 +169,9 @@ public class FragmentArtist extends Fragment implements ArtistOnCallBack {
             mService.setIDArtist(listArtist.get(position).getId());
             getActivity().startActivity(intent);
         }
+    }
+
+    public void setListArtist(ArrayList<Artist> listArtist) {
+        this.listArtist = listArtist;
     }
 }

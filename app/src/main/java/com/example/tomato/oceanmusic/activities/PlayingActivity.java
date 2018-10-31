@@ -52,11 +52,12 @@ public class PlayingActivity extends AppCompatActivity
     ImageView ivNext, ivpre, ivRepeat, ivShuffle;
     RecyclerView rvListSongPlaying;
     LinearLayoutManager layoutManager;
-    ArrayList<Song> arrSong;
+
+    public ArrayList<Song> arrSong;
     SongListPlayingAdapter songAdapter;
     Toolbar toolbar;
     CircularSeekBar circularSeekBar;
-    MusicService mService;
+    public MusicService mService;
     ImageView ivBackgound;
     RelativeLayout rlMediaControls;
 
@@ -64,16 +65,6 @@ public class PlayingActivity extends AppCompatActivity
     int mPosition = 0;
     boolean isSeeking;
 
-    BroadcastReceiver broadcastReceiverSongCompleted = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            mService = (MusicService) DataCenter.instance.musicService;
-            mPosition = mService.getPosition();
-            arrSong = mService.getArrSong();
-            updateToolbar(mPosition);
-            updateTimeSong();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,10 +81,9 @@ public class PlayingActivity extends AppCompatActivity
         if (mService != null && mService.isPlaying()) {
             updateToolbar(mPosition);
             updatePlayPauseButton();
+
             updateTimeSong();
         }
-
-        registerBroadcastSongComplete();
         updateStatusRepeatShuffle();
     }
 
@@ -133,15 +123,6 @@ public class PlayingActivity extends AppCompatActivity
         arrSong = mService.getArrSong();
     }
 
-    private void registerBroadcastSongComplete() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.ACTION_COMPLETE_SONG);
-        registerReceiver(broadcastReceiverSongCompleted, intentFilter);
-    }
-
-    private void unRegisterBroadcastSongComplete() {
-        unregisterReceiver(broadcastReceiverSongCompleted);
-    }
 
     private void showListSong() {
         arrSong = mService.getArrSong();
@@ -202,7 +183,7 @@ public class PlayingActivity extends AppCompatActivity
         rvListSongPlaying.addItemDecoration(dividerItemDecoration);
     }
 
-    private void updateToolbar(int position) {
+    public void updateToolbar(int position) {
         if (position > -1) {
             if (arrSong.size() > 0 && arrSong != null) {
                 mTvSongName.setText(arrSong.get(position).getTitle());
@@ -221,24 +202,24 @@ public class PlayingActivity extends AppCompatActivity
         }
     }
 
-    private void updateTimeSong() {
-        if (mService != null) {
-            circularSeekBar.setMax(mService.getDurationMedia());
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    SimpleDateFormat dinhDangGio = new SimpleDateFormat("mm:ss");
-                    tvTimeCenter.setText(dinhDangGio.format(mService.getCurrentMedia()));
-                    circularSeekBar.setProgress(mService.getCurrentMedia());
+    public void updateTimeSong() {
+        circularSeekBar.setMax(mService.getDurationMedia());
+            if (mService != null) {
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        SimpleDateFormat dinhDangGio = new SimpleDateFormat("mm:ss");
+                        tvTimeCenter.setText(dinhDangGio.format(mService.getCurrentMedia()));
+                        circularSeekBar.setProgress(mService.getCurrentMedia());
 
-                    mService.nextAutoPlayMusic();
-
-                    handler.postDelayed(this, 500);
-                }
-            }, 100);
-        }
-
+                        mService.nextAutoPlayMusic();
+                        if (mService.isPlaying()) {
+                            handler.postDelayed(this, 500);
+                        }
+                    }
+                }, 100);
+            }
     }
 
     @Override
@@ -307,9 +288,19 @@ public class PlayingActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onRestart() {
+        super.onRestart();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        unRegisterBroadcastSongComplete();
 
         mService = (MusicService) DataCenter.instance.musicService;
         if (mService != null && mService.getStatusForegound()) {
@@ -456,5 +447,9 @@ public class PlayingActivity extends AppCompatActivity
 
     public void setArrSong(ArrayList<Song> arrSong) {
         this.arrSong = arrSong;
+    }
+
+    public void setmPosition(int mPosition) {
+        this.mPosition = mPosition;
     }
 }
